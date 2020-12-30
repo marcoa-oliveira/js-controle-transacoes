@@ -4,8 +4,18 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
 
 ## Evolução de estudos
 
-- [ ] *Cap 1*: Código simples, sem uso de boas práticas
-- [ ] *Cap 2*: Paradigma da orientação a objetos
+- [x] *Cap 1*: Código simples, sem uso de boas práticas
+- - Desenvolvimento do código simples para realização da ação (incluir negociação em tela)
+- [x] *Cap 2*: Paradigma da orientação a objetos
+- - Criação de um _Modelo_ de negociação com orientação a objeto
+- - Classe `Negociacao.js`
+- - Método Construtor
+- - Métodos de Classe
+- - Encapsulamento: _Métodos Acessadores_ (`get`)
+- - Objetos Imutáveis: `Object.freeze()`
+- - Programação Defensiva
+- - `Object.assign()` e atalhos para props de objetos literais
+- - Declaração de variáveis `var` - `let`, _Temporal Dead Zone_
 - [ ] *Cap 3*: Controller
 - [ ] *Cap 4*: Trabalhando com datas em JS
 - [ ] *Cap 5*: Model (lista de negociações)
@@ -24,3 +34,7 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
 - [ ] *Cap 18*: Promises, Async/await e padrões de projetos
 - [ ] *Cap 19*: Padrão de Projeto Decorator, Fetch API, Metaprogramação com `reflect-metadata`
 - [ ] *Cap 20*: Webpack, Boas práticas em desenvolvimento e produção, Deploy no GithubPages
+
+## Observações
+
+- Os comentários nos códigos serão removidos na *branch main*, mas mantidos na branch de cada versão para facilitar o entendimento do passo a passo.

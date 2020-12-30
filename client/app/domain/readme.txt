@@ -1,0 +1,1 @@
+Esta pasta armazena todos os scripts que dizem respeito ao domínio da aplicação

@@ -59,6 +59,28 @@
         </tfoot>
     </table>
     
-    <script src="app/index.js"></script>
+    <!-- <script src="app/index.js"></script> removido na versão 2.1-->
+    <script src="app/domain/negociacao/Negociacao.js"></script>
+    <script>
+        // var n1 = new Negociacao()
+        // n1.quantidade = 10
+        //var n1 = new Negociacao(new Date(), 5, 700)
+        let n1 = new Negociacao(new Date(), 5, 700)
+        //Object.freeze(n1) --------------------> impede que novas atribuições sejam realizadas, msm com acesso direto ._atrib
+                                //substituido pelo Object.freeze() no método construtor da classe Negociacao.js
+        // var volume = n1.obtemVolume() ----> alterado para métodos de acesso
+        // var volume = n1.getVolume()
+        // console.log(n1.getQuantidade())
+        // console.log(n1.getData())     ----> alterado para sintaxe get
+        // console.log(n1.getValor())
+        // console.log(n1.getVolume())
+        //utilizar métodos com sintaxe get impede que um novo valor seja atribuido a um atributo da classe depois que este seja criado
+        n1.quantidade = 1000 //instrução será ignorada sem gerar msg de erro, mas não impede o acesso e alteração através de ._quantidade
+                            // nesse caso, quem impede a atribuição é o método Object.freeze()
+        console.log(n1.quantidade)
+        console.log(n1.data)
+        console.log(n1.valor)
+        console.log(n1.volume)
+    </script>
 </body>
 </html>

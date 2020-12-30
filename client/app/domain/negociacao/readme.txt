@@ -1,0 +1,1 @@
+A pasta negociacao armazena a classe Negociacao.js e suas classes de serviço
