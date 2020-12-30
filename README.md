@@ -5,18 +5,25 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
 ## Evolução de estudos
 
 - [x] *Cap 1*: Código simples, sem uso de boas práticas
-- - Desenvolvimento do código simples para realização da ação (incluir negociação em tela)
+    - Desenvolvimento do código simples para realização da ação (incluir negociação em tela)
 - [x] *Cap 2*: Paradigma da orientação a objetos
-- - Criação de um _Modelo_ de negociação com orientação a objeto
-- - Classe `Negociacao.js`
-- - Método Construtor
-- - Métodos de Classe
-- - Encapsulamento: _Métodos Acessadores_ (`get`)
-- - Objetos Imutáveis: `Object.freeze()`
-- - Programação Defensiva
-- - `Object.assign()` e atalhos para props de objetos literais
-- - Declaração de variáveis `var` - `let`, _Temporal Dead Zone_
-- [ ] *Cap 3*: Controller
+    - Criação de um _Modelo_ de negociação com orientação a objeto
+    - Classe `Negociacao.js`
+    - Método Construtor
+    - Métodos de Classe
+    - Encapsulamento: _Métodos Acessadores_ (`get`)
+    - Objetos Imutáveis: `Object.freeze()`
+    - Programação Defensiva
+    - `Object.assign()` e atalhos para props de objetos literais
+    - Declaração de variáveis `var` - `let`, _Temporal Dead Zone_
+- [x] *Cap 3*: Controller
+    - Controller `NegociacaoController.js`
+    - `app.js` - associação de elementos da DOM a funções e métodos através da interface de eventos
+    - Associação de eventos do usuário a métodos do controller
+    - Atribuição de funções a variáveis `let $ = document.querySelector.bind(document)` e função `bind()`
+    - Construtor para guardar os inputs (_evitar percorrer a DOM a cada disparo de evento_)
+    - Criando Instância de Negociação, problemas com Date()
+    - Criando objeto `Date()` a partir de valor passado pelo usuário (`.split("-")`, `.join(",")`, `[...]` _Spread Operator_, `map()`, _Arrow Functions_)
 - [ ] *Cap 4*: Trabalhando com datas em JS
 - [ ] *Cap 5*: Model (lista de negociações)
 - [ ] *Cap 6*: View
