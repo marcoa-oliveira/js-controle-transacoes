@@ -4,7 +4,7 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
 
 ## Evolução de estudos
 
-- [ ] *Cap 1*: Código simples, sem uso de boas práticas
+- [x] *Cap 1*: Código simples, sem uso de boas práticas
 - [ ] *Cap 2*: Paradigma da orientação a objetos
 - [ ] *Cap 3*: Controller
 - [ ] *Cap 4*: Trabalhando com datas em JS
