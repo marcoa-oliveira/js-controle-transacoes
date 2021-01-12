@@ -24,7 +24,11 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
     - Construtor para guardar os inputs (_evitar percorrer a DOM a cada disparo de evento_)
     - Criando Instância de Negociação, problemas com Date()
     - Criando objeto `Date()` a partir de valor passado pelo usuário (`.split("-")`, `.join(",")`, `[...]` _Spread Operator_, `map()`, _Arrow Functions_)
-- [ ] *Cap 4*: Trabalhando com datas em JS
+- [x] *Cap 4*: Trabalhando com datas em JS
+    - Criação da classe `DateConverter.js` em app/ui/converters. A classe fica responsável pela conversão dos dados referentes a data tanto para TEXTO (`DateConverter.paraTexto(data)`) quanto para o formato Date (`DateConverter.paraData(texto)`)
+    - Uso de **métodos estáticos** com os métodos `paraTexto()` e `paraData()`
+    - Uso de **FAIL FAST** para validar se os dados passados por parâmetro a `paraData()` atendem ao padrão exigido para uma instância de `Date`
+    - Tamplate Literal 
 - [ ] *Cap 5*: Model (lista de negociações)
 - [ ] *Cap 6*: View
 - [ ] *Cap 7*: Isolar e Reutilizar
