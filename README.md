@@ -28,8 +28,14 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
     - Criação da classe `DateConverter.js` em app/ui/converters. A classe fica responsável pela conversão dos dados referentes a data tanto para TEXTO (`DateConverter.paraTexto(data)`) quanto para o formato Date (`DateConverter.paraData(texto)`)
     - Uso de **métodos estáticos** com os métodos `paraTexto()` e `paraData()`
     - Uso de **FAIL FAST** para validar se os dados passados por parâmetro a `paraData()` atendem ao padrão exigido para uma instância de `Date`
-    - Tamplate Literal 
-- [ ] *Cap 5*: Model (lista de negociações)
+    - Template Literal 
+- [x] *Cap 5*: Model (lista de negociações)
+    - Criação da classe `Negociacoes.js` para tratar do encapsulamento do array de negociações.
+    - Prefixo "_" para definir que o atributo só pode ser acessado pelos métodos da própria classe.
+    - `Uncaught ReferenceError: Negociacoes is not defined at new NegociacaoController` - como **Negociacoes.js** está sendo carregado após **App.js**, temos um problema de **dependência** em **NegociacaoController**. Para isso, precisamos carregar todas as dependências antes de App.js em **index.html**.
+    - método privado `_limpaFormulario()` em `NegociacaoController`
+    - método privado `_criaNegociacao()` retorna uma nova negociação com base nos dados do form. Assim, a responsabilidade pela criação de uma nova instancia de negociação não é mais do método `adiciona`.
+    - para garantir que não seria possível alterar os valores do array de negociacoes através do método `paraArray()`, alteramos o seu return para um array vazio, concatenado com os valores do array de negociações, assim criamos uma nova referência.
 - [ ] *Cap 6*: View
 - [ ] *Cap 7*: Isolar e Reutilizar
 - [ ] *Cap 8*: Automatização de atualizações da View
