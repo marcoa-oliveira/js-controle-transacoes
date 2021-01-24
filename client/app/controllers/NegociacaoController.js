@@ -6,22 +6,19 @@ class NegociacaoController{
         this._inputQuantidade = $('#quantidade')
         this._inputValor = $('#valor')
         this._negociacoes = new Negociacoes()
+        this._negociacoesView = new NegociacoesView('#negociacoes')
+        
+        //recebe inicialmente o modelo que encapsula uma lista vazia
+        this._negociacoesView.update(this._negociacoes)
     }
 
     adiciona(event){
         event.preventDefault()
-
-        // let negociacao = new Negociacao(
-        //     DateConverter.paraData(this._inputData.value),
-        //     parseInt(this._inputQuantidade.value),
-        //     parseFloat(this._inputValor.value)
-        // )
-
-        // this._negociacoes.adiciona(negociacao)
-        
-        this._negociacoes.adiciona(this._criaNegociacao()) //modificação
-
+        this._negociacoes.adiciona(this._criaNegociacao())
+        this._negociacoesView.update(this._negociacoes) //cada nova negociação gera um update na tabela
         this._limpaFormulario()
+        // this._negociacoesView = new NegociacoesView('#negociacoes')
+        // this._negociacoesView.update()
     }
 
     _limpaFormulario(){
@@ -29,7 +26,7 @@ class NegociacaoController{
         this._inputQuantidade.value = 1
         this._inputValor.value = 0.0
         this._inputData.focus()
-    } //para limpar o formulário após inclusão dos dados
+    }
 
     _criaNegociacao(){
         return new Negociacao(

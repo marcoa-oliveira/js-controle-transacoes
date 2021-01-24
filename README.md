@@ -36,7 +36,13 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
     - método privado `_limpaFormulario()` em `NegociacaoController`
     - método privado `_criaNegociacao()` retorna uma nova negociação com base nos dados do form. Assim, a responsabilidade pela criação de uma nova instancia de negociação não é mais do método `adiciona`.
     - para garantir que não seria possível alterar os valores do array de negociacoes através do método `paraArray()`, alteramos o seu return para um array vazio, concatenado com os valores do array de negociações, assim criamos uma nova referência.
-- [ ] *Cap 6*: View
+- [x] *Cap 6*: View
+    - implementação da view `NegociacoesView.js` em `client/app/views`
+    - a estrutuda da tabela que antes era apresentada em **index.html**, agora será retornada pelo método `template()` de `NegociacoesView` como **template literal**
+    - o construtor de `NegociacaoController` foi alterado para que ao iniciar, carregue uma tabela vazia na tela
+    - método `adiciona` em **NegociacaoController** foi alterado para definir que cada nova negociação gere um update na tabela
+    - adicionado o metodo `volumeTotal()` em **Negocicacoes.js** para extrair o valor total das negociações cadastradas
+    - utilizamos `.reduce` em `VolumeTotal()` em substituição ao `for` para reduzir a verbosidade
 - [ ] *Cap 7*: Isolar e Reutilizar
 - [ ] *Cap 8*: Automatização de atualizações da View
 - [ ] *Cap 9*: Padrão de Projeto Proxy e Data binding
