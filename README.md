@@ -43,7 +43,18 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
     - método `adiciona` em **NegociacaoController** foi alterado para definir que cada nova negociação gere um update na tabela
     - adicionado o metodo `volumeTotal()` em **Negocicacoes.js** para extrair o valor total das negociações cadastradas
     - utilizamos `.reduce` em `VolumeTotal()` em substituição ao `for` para reduzir a verbosidade
-- [ ] *Cap 7*: Isolar e Reutilizar
+- [x] *Cap 7*: Isolar e Reutilizar
+    - classe `ui/models/Mensagem.js`responsável pela exibição de msgs na tela
+    - **Setters**
+    - **Parametro Default**
+        - definimos que *caso nenhum valor de texto seja passado como atributo da classe `Mensagem`, esse valor será uma string vazia para evitar `undefined`*
+    - `negociacaoController` envia uma mensagem informando que a negociacao foi cadastrada utilizando a classe `Mensagem`
+    - definimos que o método `template` da classe `MensagemView` fica responsável por tratar a exibição de em tela para strings vazias na mensagem
+    **Herança e Reutilização de Código**
+        - Criação da classe `ui/views/View` para centralizar o `constructor` e o método `update` das views, já que são identicos.
+        - **extends**: as classes `NegociacoesView` e `MensagemView` passam a extender da classe `View` e assim herdam as funcionalidades do construtor e do método `update`
+        - **super**: quando uma classe filha herda o construtor da classe pai mas recebe uma quantidade diferente de atributos, o primeiro parâmetro do contrutor recebe a chamada `super(atrib)` onde **atrib** é o atributo herdado da classe pai.
+    - variáveis que não terão seu valor atualizado foram alteradas de `let` para `const`
 - [ ] *Cap 8*: Automatização de atualizações da View
 - [ ] *Cap 9*: Padrão de Projeto Proxy e Data binding
 - [ ] *Cap 10*: Padrão de Projeto Factory

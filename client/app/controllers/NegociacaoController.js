@@ -1,7 +1,7 @@
 class NegociacaoController{
 
     constructor(){
-        let $ = document.querySelector.bind(document)
+        const $ = document.querySelector.bind(document) //alterado de let para const pois o valor da váriável não será mudado
         this._inputData = $('#data')
         this._inputQuantidade = $('#quantidade')
         this._inputValor = $('#valor')
@@ -10,15 +10,22 @@ class NegociacaoController{
         
         //recebe inicialmente o modelo que encapsula uma lista vazia
         this._negociacoesView.update(this._negociacoes)
+
+        //instanciando o modelo
+        this._mensagem = new Mensagem()
+
+        //adiciona as propriedades de MensagemView e passa o id da Div que vai receber a mensagem
+        this._mensagemView = new MensagemView('#mensagemView')
+        this._mensagemView.update(this._mensagem)
     }
 
     adiciona(event){
         event.preventDefault()
         this._negociacoes.adiciona(this._criaNegociacao())
+        this._mensagem.texto = 'Negociação adicionada com sucesso!'
+        this._mensagemView.update(this._mensagem)
         this._negociacoesView.update(this._negociacoes) //cada nova negociação gera um update na tabela
         this._limpaFormulario()
-        // this._negociacoesView = new NegociacoesView('#negociacoes')
-        // this._negociacoesView.update()
     }
 
     _limpaFormulario(){

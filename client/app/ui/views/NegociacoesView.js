@@ -1,12 +1,14 @@
-class NegociacoesView{
+class NegociacoesView extends View{  //extends faz com que a classe herde funcionalidades da classe View
 
-    constructor(seletor){
-        this._elemento = document.querySelector(seletor)
-    }
+    // constructor(seletor){
+    //     this._elemento = document.querySelector(seletor)
+    // }
 
-    update(model){ //recebe a ultima versão do array de negociações
-        this._elemento.innerHTML = this.template(model)
-    }
+    // update(model){ //recebe a ultima versão do array de negociações
+    //     this._elemento.innerHTML = this.template(model)
+    // } 
+
+    //fará uso do construtor e do método update da classe View
 
     template(model){ //organiza os dados da ultima versão do array para a montagem da tabela
         return `
