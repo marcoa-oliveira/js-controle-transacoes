@@ -5,7 +5,18 @@ class NegociacaoController{
         this._inputData = $('#data')
         this._inputQuantidade = $('#quantidade')
         this._inputValor = $('#valor')
-        this._negociacoes = new Negociacoes()
+
+        //self é NegociacaoController
+        //const self = this
+        
+        //this._negociacoes = new Negociacoes(this, function(model){
+            //passando this como parâmetro, a referência do contexto da instância de NegociacaoController é passada para dentro de Negociacao
+        this._negociacoes = new Negociacoes( (model => { //função alterada para arrow function
+            console.log(this) //continua sendo Negociacoes
+            this._negociacoesView.update(model) //agora this aponta para o contexto de NegociacaoController (this como parâmetro)
+            //self._negociacoesView.update(model) //força a referência de contexto ao contexto de NegociacaoController
+        })
+
         this._negociacoesView = new NegociacoesView('#negociacoes')
         
         //recebe inicialmente o modelo que encapsula uma lista vazia
@@ -24,7 +35,7 @@ class NegociacaoController{
         this._negociacoes.adiciona(this._criaNegociacao())
         this._mensagem.texto = 'Negociação adicionada com sucesso!'
         this._mensagemView.update(this._mensagem)
-        this._negociacoesView.update(this._negociacoes) //cada nova negociação gera um update na tabela
+        //this._negociacoesView.update(this._negociacoes) removido pois a função já é passada no construtor
         this._limpaFormulario()
     }
 
@@ -42,4 +53,12 @@ class NegociacaoController{
             parseFloat(this._inputValor.value)
         )
     }
+
+    apaga(){ //apaga as negociações quando o usuário pressionar "apagar" e atualiza a tela com uma msg
+        this._negociacoes.esvazia()
+        //this._negociacoesView.update(this._negociacoes) removido pois a função já é passada no construtor
+        this._mensagem.texto = `Negociações apagadas com sucesso!`
+        this._mensagemView.update(this._mensagem)
+    }
+
 }
