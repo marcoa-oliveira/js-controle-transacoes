@@ -6,15 +6,27 @@ class NegociacaoController{
         this._inputQuantidade = $('#quantidade')
         this._inputValor = $('#valor')
 
-        //self é NegociacaoController
-        //const self = this
-        
-        //this._negociacoes = new Negociacoes(this, function(model){
-            //passando this como parâmetro, a referência do contexto da instância de NegociacaoController é passada para dentro de Negociacao
-        this._negociacoes = new Negociacoes( (model => { //função alterada para arrow function
-            console.log(this) //continua sendo Negociacoes
-            this._negociacoesView.update(model) //agora this aponta para o contexto de NegociacaoController (this como parâmetro)
-            //self._negociacoesView.update(model) //força a referência de contexto ao contexto de NegociacaoController
+        // this._negociacoes = new Negociacoes( model => {
+        //     this._negociacoesView.update(model) 
+        // }) deixou de funcionar pois negociacoes não recebe mais a armadilha
+
+        const self = this //retornamos com a solução self para que o contexto do controller seja passado para dentro do proxy
+
+        this._negociacoes = new Proxy(new Negociacoes(), {
+            get (target, prop, receiver){
+                if(typeof(target[prop]) == typeof(Function) && ['adiciona', 'esvazia'].includes(prop)){
+                    return function(){
+                        console.log(`"${prop}" disparou a armadilha`)
+                        target[prop].apply(target, arguments)
+                        //target é a instância real de Negociacoes
+
+                        //this._negociacoesView.update(target) assim não funciona pois o this aponta para o contexto do próprop proxy
+                        self._negociacoesView.update(target) //por isso temos que usar o self
+                    }
+                } else {
+                    return target[prop]
+                }
+            }
         })
 
         this._negociacoesView = new NegociacoesView('#negociacoes')
@@ -35,7 +47,6 @@ class NegociacaoController{
         this._negociacoes.adiciona(this._criaNegociacao())
         this._mensagem.texto = 'Negociação adicionada com sucesso!'
         this._mensagemView.update(this._mensagem)
-        //this._negociacoesView.update(this._negociacoes) removido pois a função já é passada no construtor
         this._limpaFormulario()
     }
 
@@ -56,7 +67,6 @@ class NegociacaoController{
 
     apaga(){ //apaga as negociações quando o usuário pressionar "apagar" e atualiza a tela com uma msg
         this._negociacoes.esvazia()
-        //this._negociacoesView.update(this._negociacoes) removido pois a função já é passada no construtor
         this._mensagem.texto = `Negociações apagadas com sucesso!`
         this._mensagemView.update(this._mensagem)
     }

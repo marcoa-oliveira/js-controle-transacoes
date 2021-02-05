@@ -72,9 +72,47 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
     - O contexto dinâmico de `this` faz com que se precise de uma solução em `NegociacaoController` pois a referência passada no construtor em `this._negociacoes = new Negociacoes(function(model){...})` altera o contexto do this interno para o contexto de negociacoes, mas precisamos do this no contexto de `NegociacaosController`.
     - Uma saída seria a declaração de uma constante que guardaria o contexto de this de NegociacaoController, por exemplo `const self = this`, e dentro de `new Negociacao`, usariamos `self._negociacoesView.update(model)` para forçar que a chamada do update seja no contexto da instância de NegociacaoController.
     - Outra maneira de resolver a questão do escopo dinâmico seria **passar o contexto de `this` como parâmetro do construtor de Negociacao**, adicionar uma variável que receba esse contexto no construtor em `Negociacao.js` e utilizar o método `.call` nas chamadas da armadilha em `adiciona()` e `esvazia()`.
-    - Uma maneira menos verbosa é a passagem da função em `new Negociacao` como **Arrow Function**: `this._negociacoes = new Negociacoes( model => { ... })`. Assim, o contexto **estático** da arrow function faz com que a referência de this permaneça em quem fez a chamada, ou seja, em `NegociacaoController`
-        
-- [ ] *Cap 9*: Padrão de Projeto Proxy e Data binding
+    - Uma maneira menos verbosa é a passagem da função em `new Negociacao` como **Arrow Function**: `this._negociacoes = new Negociacoes( model => { ... })`. Assim, o contexto **estático** da arrow function faz com que a referência de this permaneça em quem fez a chamada, ou seja, em `NegociacaoController`      
+- [x] *Cap 9*: Padrão de Projeto Proxy e Data binding
+    - A propriedade `this._armadilha = armadilha` em `Negociacoes.js` não tem qualquer relação com o domínio que a classe representa, está lá apenas por uma questão de infraestrutura.
+    - Não é uma solução muito adequada pois obriga que seja recebida em TODAS AS CLASSES DE MODELO, além de ser necessária sua chamada em cada método que altera o estado do modelo.
+    - **Modelo do domínio**: não contém nada que não diga respeito ao problema do domínio que resolve
+    - **Padrão de projeto PROXY**: envolve a instância que queremos manipular, contendo um correspondente para cada propriedade e método presente nessa instância.
+    - `proxy = new Proxy(instancia, {})`, o construtor recebe a instância que será encapsulada e um **objeto literal** que contém o código das armadilhas que desejamos executar.
+    - Ao criarmos um proxy de Negociacao, por exemplo, ao acessar a propriedade `proxy.valor` estaremos acessando a propriedade `valor` da instância de Negociacao que foi encapsulada.
+    - Para que não seja possível o acesso direto à instância encapsulada, podemos adotar: `negociacao = new Proxy(new Negociacao(new Date(), 1, 100), {})`, assim, a variável negociacao serve para mascarar o proxy.
+    - Se desejarmos, por exemplo, que uma mensagem seja gerada toda vez que uma propriedade fosse acessada via Proxy, poderiamos fazer o **handler** da seguinte forma (armadilha de leitura):
+    `const negociacao = new Proxy(new Negociacao(new Date(), 1, 100), {`
+        `get (target, prop, receiver){`
+            `console.log('A propriedade "${prop}" caiu na armadilha')`
+            `return target[prop]`
+        `}`
+    `})`
+    - `target` é uma referência ao **objeto encapsulado** (o objeto verdadeiro), `prop` é uma string com o **nome da propriedade** acessada, `receiver` é uma referência ao próprio Proxy.
+    - Toda armadilha deve ficar responsável pelo seu retorno, podemos usar o parâmetro `target` acompanhado da `prop` para acessar o atributo da propriedade chamada. **objetos javascript fornecem acesso às suas propriedades através de ponto (.) ou com o uso de colchetes que recebem uma string com o nome da propriedade desejada**
+    - Para adicionarmos uma armadilha de escrita, usamos `set`:
+    `const negociacao = new Proxy(new Negociacao(new Date(), 1, 100), {`
+        `get ...`
+        `set (target, prop, value, receiver){`
+            `console.log('${prop} guarda ${target[prop]}, receberá ${value}')`
+            `target[prop] = value`
+            `return target[prop] == value`
+        `}`
+    `})`
+    - A especificação de Proxy do **ES2015** aponta que é necessário retornar true em uma armadilha para confirmar sua execução bem sucedida.
+    - **Reflect API** provê métodos para operações interceptáveis, semelhantes aos métodos manipuladores de Proxy. Centraliza métodos estáticos que permitem, leitura, escrita e chamada de métodos e funções dinâmicamente.
+    - Com o uso de `reflect` podemos alterar o setter do proxy removendo a atribuição do `target[prop]` e a comparação entre a propriedade do alvo e o valor passado, pois `Reflect.set()` faz as duas coisas (atribui o valor à propriedade alvo e retorna true ou false para a operação)
+    `const negociacao = new Proxy(new Negociacao(new Date(), 1, 100), {`
+        `get ...`
+        `set (target, prop, value, receiver){`
+            `console.log('${prop} guarda ${target[prop]}, receberá ${value}')`
+            `return Reflect.set(target, prop, value)`
+        `}`
+    `})`
+    - Atualização de `NegociacaoController` para uso do Proxy
+    - Alteramos a criação da instância de negociacões em `NegociacaoController` para que fosse instanciado um objeto encapsulado pelo Proxy. Dentro dele, o `get` realiza a verificação para saber se quem realizou a chamada foram os métodos `adiciona()` ou `esvazia()`.
+    - Caso seja um deles, dispara a armadilha e executa o método e faz a chamada da atualização da view.
+    - Voltamos a utilizar `self` para puxar para o contexto do proxy o this do controller.    
 - [ ] *Cap 10*: Padrão de Projeto Factory
 - [ ] *Cap 11*: Exceções
 - [ ] *Cap 12*: XMLHttpRequest e conexão com API
