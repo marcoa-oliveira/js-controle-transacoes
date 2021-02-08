@@ -3,12 +3,11 @@ class ProxyFactory{
 
         return new Proxy(objeto, {
             get (target, prop, receiver){
-                //usa o array props para realizar o includes
-                // if(typeof(target[prop]) == typeof(Function) && props.includes(prop)){
+            
                 if(ProxyFactory._ehFuncao(target[prop]) && props.includes(prop)){
                     return function(){
                         console.log(`"${prop}" disparou a armadilha`)
-                        target[prop].apply(target, arguments) //executa a armadilha que recebe o obj original
+                        target[prop].apply(target, arguments)
                         armadilha(target)
                     }
                 } else {
@@ -16,11 +15,9 @@ class ProxyFactory{
                 }
             },
 
-            //Handler para tratar de propriedades (getters e setters)
             set (target, prop, value, receiver){
                 const updated = Reflect.set(target, prop, value)
                 
-                //só executamos a armadilha se fizer parte da lista de props
                 if(props.includes(prop)) armadilha(target)
 
                 return updated
@@ -36,5 +33,4 @@ class ProxyFactory{
     static _ehFuncao(fn){
         return typeof(fn) == typeof(Function)
     }
-    //retorna se o parametro passado é função ou não
 }

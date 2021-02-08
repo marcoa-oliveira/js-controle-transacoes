@@ -6,7 +6,7 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
 
 - [x] *Cap 1*: Código simples, sem uso de boas práticas
     - Desenvolvimento do código simples para realização da ação (incluir negociação em tela)
-    
+
 - [x] *Cap 2*: Paradigma da orientação a objetos
     - Criação de um _Modelo_ de negociação com orientação a objeto
     - Classe `Negociacao.js`
@@ -160,7 +160,34 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
     - **Parâmetros REST**: utilizamos o **REST operator `...`** no parâmetro `props` => `...props`, assim indicamos que ao instânciarmos a classe Bind, **do 3º parâmetro em diante, todos fazem parte de um array**. 
     - **Apenas o ultimo parâmetro pode receber um REST operator**
 
-- [ ] *Cap 11*: Exceções
+- [x] *Cap 11*: Exceções
+    - Alteração do campo **data** em `index.html` para um imput do tipo **text**, pois o imput do tipo **date** pode não funcionar corretamente em alguns navegadores.
+    - Com esta alteração, o método `paraData()` da classe `DateConverter` acaba quebrando, pois o formato recebido no campo é exatamente o formato digitado pelo usuário e não mais o template "aaaa-mm-dd" usado pelo input date.
+    - Alteramos a expressão regular que realiza a validação do formato digitado no input para atender o padrão dd-mm-aaaa 
+    
+    ```javascript
+        if(!/\d{2}\/\d{2}\/\d{4}/.test(texto))
+    ```
+
+    - Assim, foi necessário alterar o desmembramento da string, no caso o separador `.split('-')` para `.split('/')` e realizar a inversão do formado em `return new Date`
+
+    ```javascript
+        return new Date(...texto.split('/')
+            .reverse() //inverte a ordem dos itens do array e assim os coloca no template correto para a criação da instância de Date
+            .map((item, indice) => item - indice % 2 ))
+    ``` 
+
+    - **Exceções**: Tratamento de exceções lançadas com `throws`. Dentro do bloco `try`, temos a instrução que pode, ou não, ocasionar uma excessão. Em caso positivo, o fluxo do código é direcionado para o bloco `catch`, que recebe como parâmetro um objeto com informações da exceção lançada.
+    - Método `adiciona()` de `NegociacaoController` alterado para a estrutura **try-catch**
+    - Podemos realizar um tratamento das mensagens apresentadas ao usuário em casos de exceções, pois não há interesse que mensagens ocasionadas por erros de sintaxe no código sejam apresentadas em tela ao usuário. Assim, criamos nossas próprias exceções e utilizamos `instanceof` para obter o tipo de de exceção lançada.
+    - Como as classes de tratamento das exceções são extendidas de `error` (por exemplo `DataInvalidaException`) precisamos forçar a identificação da origem das mensagens de error, pois a msg disparada no console atribui a origem a classe errada (no caso, Error) e não a classe `DataInvalidaException`. Assim, podemos fazer o uso de:
+
+    ```javascript
+        this.name = this.constructor.name
+    ```
+
+    no construtor da classe `DataInvalidaException`, mas isso seria inviável caso o número de exceções aumente. Então criamos uma classe em `client/app/util/ApplicationException.js` que cuidará dessa parte.
+
 - [ ] *Cap 12*: XMLHttpRequest e conexão com API
 - [ ] *Cap 13*: Callback Hell e Padrão de Projeto Promise
 - [ ] *Cap 14*: Persistência de dados com IndexedDB
