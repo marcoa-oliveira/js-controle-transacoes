@@ -188,7 +188,66 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
 
     no construtor da classe `DataInvalidaException`, mas isso seria inviável caso o número de exceções aumente. Então criamos uma classe em `client/app/util/ApplicationException.js` que cuidará dessa parte.
 
-- [ ] *Cap 12*: XMLHttpRequest e conexão com API
+- [x] *Cap 12*: XMLHttpRequest e conexão com API
+    - A partir daqui, o uso da index deve ser feito através do **servidor**.
+    `..\js-controle-transacoes\server> npm start`
+    - A aplicação passa a ser acessível pelo endereço: (http://localhost:3000/) 
+    - `importarNegociacoes()` em **NegociacaoController** será o método responsável por realizar a **requisição dos dados no servidor** através de ``XMLHTTPREQUEST`. 
+    - Criação da classe `NegociacaoService.js` responsável pela comunicação com o servidor e devolução das respostas ao controller.
+    - Com base no **estado da requisição** `xhr.readyState` e no **status da resposta** `xhr.status` fazemos a verificação da requisição.
+        
+        ```javascript
+            obterNegociacaoDaSemana(cb){
+                const xhr = new XMLHttpRequest()
+                xhr.open('GET', 'negociacoes/semana')
+
+                xhr.onreadystatechange = () => {
+                    if(xhr.readyState == 4){
+                        if(xhr.status == 200){
+                            
+                            //convertendo o obj em instância de Negociacao
+                            const negociacoes = JSON
+                                .parse(xhr.responseText)
+                                .map(objeto => new Negociacao(new Date(objeto.data), objeto.quantidade, objeto.valor))
+
+                            cb(null, negociacoes) //operação concluída sem erro
+                            
+                        } else {
+                            console.error(xhr.responseText)
+                            cb('Não foi possível obter as negociações da semana!', null) //erro na operação
+                        }
+                    }
+                }
+
+                xhr.send() //executa a requisição configurada
+            }
+        ```
+        - A resposta da requisição vem em formato de texto JSON, por isso fazemos uso do `parse` para transformá-la em um objeto e com o uso do `.map` **convertemos esse array de objetos em instâncias de negociação**
+        - `objeto.data` é passado como **new Date** pois no objeto retornado pelo servidor, o formato de data está diferente do esperado.
+        - Em `NegociacaoController.js` o método `importaNegociacoes()` faz uma chamada do método `obterNegociacoesDaSemana()` passando um **CALLBACK** (cb) no padrão **Error-First-Callback**. 
+        
+        ```javascript
+            importaNegociacoes(){
+        
+        this._service.obterNegociacaoDaSemana((err, negociacoes) => {
+            if(err){
+                this._mensagem.texto = 'Não foi possível obter as negociações da semana!'
+                return
+            }
+
+            negociacoes.forEach(negociacao => {
+                this._negociacoes.adiciona(negociacao)
+            });
+
+            this._mensagem.texto = 'Negociações importadas com sucesso'
+        })
+    } 
+        ```
+
+    - Neste caso, se **err for diferente de NULL** significa que não foi possível por algum motivo realizar a operação, o callback **retorna** uma mensagem de erro ao usuário. 
+    - Caso contrário, `obterNegociacaoDaSemana()` retornará as negociações presentes no servidor e estas serão adicionadas. 
+
+
 - [ ] *Cap 13*: Callback Hell e Padrão de Projeto Promise
 - [ ] *Cap 14*: Persistência de dados com IndexedDB
 - [ ] *Cap 15*: IndexedDB e Boas Práticas na conexão
