@@ -59,18 +59,77 @@ class NegociacaoController{
 
     importaNegociacoes(){
         
-        this._service.obterNegociacaoDaSemana((err, negociacoes) => {
-            if(err){
-                this._mensagem.texto = 'Não foi possível obter as negociações da semana!'
-                return
-            }
+        // this._service.obterNegociacaoDaSemana((err, negociacoes) => {
+        //     if(err){
+        //         this._mensagem.texto = 'Não foi possível obter as negociações da semana!'
+        //         return
+        //     }
 
-            negociacoes.forEach(negociacao => {
-                this._negociacoes.adiciona(negociacao)
-            });
+        //     negociacoes.forEach(negociacao => {
+        //         this._negociacoes.adiciona(negociacao)
+        //     });
 
-            this._mensagem.texto = 'Negociações importadas com sucesso'
-        })
+        //     this._mensagem.texto = 'Negociações importadas com sucesso'
+        // }) ALTERADO PARA PADRÃO PROMISE
+
+        // const negociacoes = []
+
+        // this._service.obterNegociacaoDaSemana()
+        //     .then(semana => {
+        //         negociacoes.push(...semana) //spread operator
+        //         //quando retornamos uma promise, seu retorno é acessível ao encadear uma chamada à then
+        //         return this._service.obtemNegociacoesDaSemanaAnterior()
+        //     })
+        //     .then(anterior => {
+        //         negociacoes.push(...anterior)
+        //         negociacoes.forEach(negociacao => this._negociacoes.adiciona(negociacao))
+        //     })
+        //     .then(retrasada => {
+        //         negociacoes.push(...retrasada)
+        //         negociacoes.forEach(negociacao => this._negociacoes.adiciona(negociacao))
+        //         this._mensagem.texto = 'Negociações importadas com sucesso!'
+        //     })
+        //     .catch(err => this._mensagem.texto = err) ALTERADO PARA O USO DE PROMISE.ALL()
+
+        // this._service.obterNegociacaoDaSemana().then( //recebe dois parâmetros (cb) -  
+        //     negociacoes => { //---------> negociacoes recebe o retorno da operação assinc.
+        //         negociacoes.forEach(negociacao => this._negociacoes.adiciona(negociacao))
+        //         this._mensagem.texto = 'Negociações importadas com sucesso'
+        //     },
+        //     err => this._mensagem.texto = err  //err dá acesso aos possíveis erros
+        // )
+
+        // Promise.all([
+        //     this._service.obtemNegociacaoDaSemana(), //array em index 0
+        //     this._service.obtemNegociacoesDaSemanaAnterior(), //array em index 1
+        //     this._service.obtemNegociacoesDaSemanaRetrasada() //array em index 2
+        // ])
+        // .then(periodo => {
+        //     //periodo é um array de arrays com 3 elementos
+            
+        //     periodo = periodo.reduce((novoArray, item) => novoArray.concat(item), []) //.1
+        //         .forEach(negociacao => this._negociacoes.adiciona(negociacao)) //2.
+            
+        //     this._mensagem.texto = 'Negociações importadas com sucesso!'
+            
+        //     //1. achata os 3 arrays em um array de dimensão única (flaten)
+        //     //1. periodo passa a ter a quantidade total de elementos dos 3 arrays
+        //     //2. insere as negociações importadas na lista de negociações da view
+
+        //     console.log(periodo)
+        // })
+        // .catch(err => this._mensagem.texto = err) RESPONSABILIDADE PASSADA PARA negociacaoService.js/obtemNegociacoesdoPeriodo()
+
+        this._service  //agora importa utilizando o método obtemNegociacoesDoPeriodo() de negociacaoService.js
+            .obtemNegociacoesDoPeriodo()
+            .then(negociacoes => {
+                negociacoes
+                    .filter(novaNegociacao => 
+                        !this._negociacoes.paraArray().some(negociacaoExistente => novaNegociacao.equals(negociacaoExistente)))
+                    .forEach(negociacao => this._negociacoes.adiciona(negociacao))
+                this._mensagem.texto = 'Negociacoes importadas com sucesso!'
+            })
+            .catch(err => this._mensagem.texto = err) 
     }
 
 }

@@ -245,10 +245,89 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
         ```
 
     - Neste caso, se **err for diferente de NULL** significa que não foi possível por algum motivo realizar a operação, o callback **retorna** uma mensagem de erro ao usuário. 
-    - Caso contrário, `obterNegociacaoDaSemana()` retornará as negociações presentes no servidor e estas serão adicionadas. 
+    - Caso contrário, `obterNegociacaoDaSemana()` retornará as negociações presentes no servidor e estas serão adicionadas.
 
+- [x] *Cap 13*: Callback Hell e Padrão de Projeto Promise
+    
+    - **Callback HELL**: estrutura que lembra uma pirâmide deitada:
+    ```javascript
+        //exemplo
+        const service = new HttpService()
+        let resultado = []
 
-- [ ] *Cap 13*: Callback Hell e Padrão de Projeto Promise
+        service.get('http://...', (err, dados1) => {
+            resultado = resultado.concat(dados1)
+            service.get('http://...', (err, dados2) => {
+                resultado = resultado.concat(dados2)
+                service.get('http://...', (err, dados3) => {
+                    resultado = resultado.concat(dados3)
+                    service.get('http://...', (err, dados4) => {
+                        resultado = resultado.concat(dados4)
+                        console.log('lista completa')
+                        console.log(resultado)
+                    })
+                })
+            })
+        })
+    ```  
+
+    - **Padrão de Projeto Promise**: Uma promomise é o resultado futuro de uma ação. Padrão criado para lidar com operações **assíncronas**.
+    - Métodos que retornam uma Promise não precisam receber um callback.
+    - Para lidarmos com uma promise, utilizamos a função `then()`, que recebe como parâmetro duas funções callback, sendo a primeira resposável por receber o retorno da operação assíncrona e a segunda os possíveis erros.
+    - Assim, o método `importaNegociacoes()` de `NegociacaoController.js` foi alterado para esperar uma promise.
+    -  Também foi alterado o método `obterNegociacoesDaSemana()` em `negociacaoService.js` para que retorne uma promise.
+    
+    ```javascript
+        return new Promise((resolve,reject) => {
+            //...
+            if(xhr.status == 200) {
+                //...
+                resolve(negociacoes) //retorna ao controller o resultado da solicitação ao servidor
+            } else {
+                reject('mensagem de erro') //retorna mensagem de erro em caso de falha na operação
+            }
+            //...
+            xhr.send()
+        })    
+    ```
+
+    -  A estrutura do **construtor da promise** recebe dois parâmetros **Resolve()** e **Reject()**, que são responsáveis por lidar com o retorno da operação assíncrona e os eventuais erros que possam surgir.
+    - Criação da classe `client/app/util/HttpService.js` que isola a configuração do XMLHttpRequest utilizando padrão promise.
+    - Em seguida, alteramos novamente o método `obterNegociacoesDaSemana()` para receber o retorno da promise criada em HttpService, transferindo assim a responsabilidade de lidar com XMLHttpRequest.
+    - Criação do método `obtemNegociacoesDaSemanaAnterior()` em negociacaoService.
+    - Criação do método `obtemNegociacoesDaSemanaRetrasada()`
+    - Alteração do método `importaNegociacoes()` para receber um array de negociações concatenadas
+    - `Promise.all()`: recebe um array de promises como parâmetro e as resolve em paralelo, retornando um **array de arrays** com as promises resolvidas.
+    - O método `importaNegociacoes()` foi alterado para lidar com `Promisse.all()`, mas a lógica de busca das **negociações por período** não deveria estar no controller, mas sim em `NegociacaoService`, então passamos essa responsabilidade para o método `NegociacaoService\obtemNegociacoesDoPeriodo()` e o método passou a chamar o método de serviço para importar.
+    - Utilizamos `.sort()` para ordenar as negociações importadas por data, já que o método realiza uma comparação "A - B" para retornar valores 0 (para iguais), (B > A) ou (A > B). No caso da comparação utilizando `.getTime()` o método retorna um número que representa uma data e assim podemos realizar a operação.
+    - Como já visto antes, *Arrow Functions* sem bloco (com uma única instrução) possuem return implícito. Os `.then()` dos métodos de `negociacaoService()` são arrow functions com uma única instrução,  por isso, removemos os blocos de instrução e a instrução return para reduzir a verbosidade.
+    - Nossa preocupação agora é impedir **importações duplicadas**. Assim, implementamos o método `equals()` em `Negociacao.js`
+    - O método `equals(negociacao)` realiza a comparação entre **a instância** que chama o método e a negociação passada por **parâmetro**.
+    - Como a comparação é realizada entre TODOS os atributos de negociação, podemos converter a instância e o parâmetro em string e realizar uma comparação simples, sem todos os && que colocamos.
+    
+    ```javascript
+        equals(negociacao){
+            return JSON.stringify(this) == JSON.stringify(negociacao) //comparação literal entre os valores
+        }
+    ```
+
+    - Em `importaNegociacoes()` implementamos o filtro para que não haja duplicação de negociações importadas:
+
+    ```javascript
+    //...
+        this._service
+            .obtemNegociacoesDoPeriodo()
+            .then(negociacoes => {
+                negociacoes
+                    .filter(novaNegociacao => 
+                        !this._negociacoes.paraArray().some(negociacaoExistente => novaNegociacao.equals(negociacaoExistente)))
+                    .forEach(negociacao => this._negociacoes.adiciona(negociacao))
+        //...
+    ```
+
+    - A função `filter()` tem como lógica o retorno da função `some()` que é aplicada na lista já existente retornando `true` ou `false`.
+    - Quando realizamos a importação da negociação, `some()` verifica se ela não existe na lista, como a função retornaria FALSE em caso de uma negociação nova, não atenderia nossa necessidade no método `filter()`, assim invertemos a saída (!) para true para que o filter considere o novo elemento na lista.
+    
 - [ ] *Cap 14*: Persistência de dados com IndexedDB
 - [ ] *Cap 15*: IndexedDB e Boas Práticas na conexão
 - [ ] *Cap 16*: Padrão de Projeto DAO

@@ -22,4 +22,13 @@ class Negociacao{
         return this._valor
     }
 
+    equals(negociacao){
+        // return this.data.getDate() == negociacao.data.getDate()
+        //     && this.data.getMonth() == negociacao.data.getMonth()
+        //         && this.data.getFullYear() == negociacao.data.getFullYear()
+        //             && this.quantidade == negociacao.quantidade
+        //                 && this.valor == negociacao.valor   PODEMOS SUBSTITUIR TUDO ISSO POR:
+        return JSON.stringify(this) == JSON.stringify(negociacao) //pois a condição TRUE necessita que TODOS os valores sejam iguais
+    }
+
 }
