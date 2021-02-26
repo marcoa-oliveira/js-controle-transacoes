@@ -327,8 +327,99 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
 
     - A função `filter()` tem como lógica o retorno da função `some()` que é aplicada na lista já existente retornando `true` ou `false`.
     - Quando realizamos a importação da negociação, `some()` verifica se ela não existe na lista, como a função retornaria FALSE em caso de uma negociação nova, não atenderia nossa necessidade no método `filter()`, assim invertemos a saída (!) para true para que o filter considere o novo elemento na lista.
+
+- [x] *Cap 14*: Persistência de dados com IndexedDB
+    - Praticando *indexedDB* em arquivo separado. `client/db.html`
     
-- [ ] *Cap 14*: Persistência de dados com IndexedDB
+    ```javascript
+        const openRequest = indexedDB.open("nomeDoBanco", 1) //1 é a versão do banco
+    ```
+
+    - O retorno de `open()` é uma instância de **IDBOpenDBRequest**, que é uma requisição de abertura do banco. Toda vez que fazemos uma requisição, precisaremos lidar com os eventos `onupgradeneeded`, `onsuccess` e `onerror`.
+    
+    ```javascript
+        openRequest.onupgradeneeded = e => console.log('Cria ou altera um banco já existente')
+        openRequest.onsuccess = e => console.log('Conexão obtida com sucesso')
+        openRequest.onerror = e => console.log(e.target.error)
+    ```
+
+    - A conexão com o banco é obtida através dos eventos `onsuccess` e `onupgradeneeded` que retorna uma instância de **IDBDatabase** representando a conexão.
+    - Em `db.html` criamos a conexão e guardamos sua instância na variável `connection`
+    - **Object Store**: algo análogo às tabelas do SQL
+    - Precisamos verificar se uma Store existe ou não no momento de sua criação. Se existir, vamos apagá-la antes de criá-la novamente, pois o evento `onupgradeneeded` também pode ser disparado quando o banco for atualizado.
+    - `connection.objectStoreNames.contais()`: método que realiza a verificação da existência de uma store através de seu nome.
+    - `connection.deleteObjectStore()`: método que apaga a store indicada
+    - `connection.createObjectStore()`: cria a store
+
+    ```javascript
+        openRequest.onupgradeneeded = e => {
+            console.log('Cria ou altera um banco já existente')
+            connection = e.target.result
+
+            if(connection.objectStoreNames.contains('negociacoes')){
+                connection.deleteObjectStore('negociacoes')
+            }
+
+            connection.createObjectStore('negociacoes', {autoIncrement:true})
+        }
+    ```
+
+    - `autoIncrement:true`: cria internamente um identificador único para os objetos salvos na store
+    - O método `onupgradeneeded` só é chamado quando a versão do banco é superior a que já se encontra armazenada, assim, precisamos mudar a versão do banco para "2" na solicitação de conexão.
+    - **Transação de escrita:** 
+    ```javascript
+    function adiciona(){
+        const negociacao = new Negociacao(new Date(), 200, 1);
+        const transaction = connection.transaction(['negociacoes'], 'readwrite')
+        const store = transaction.objectStore('negociacoes')
+        const request = store.add(negociacao)
+
+        request.onsuccess = e => {console.log('negociação salva com sucesso!')}
+        request.onerror = e => {console.warn();('não foi possível salvar a negociação!')}
+    }
+    ```
+    `connection.transaction()` recebe dois parâmetros. O primeiro é o **nome da store** que receberá a transação e o segundo é a permissão de acesso, ou seja, `readwrite` para **escrita** e `readonly` para apenas leitura.
+
+    Podemos também encadear todas as chamadas de métodos, assim evitamos a criação de muitas variáveis, deixando o método `adiciona()` assim:
+
+    ```javascript
+    function adiciona(){
+        const negociacao = new Negociacao(new Date(), 200, 1);
+        
+        const request = connection //chamadas encadeadas -----------------
+            .transaction(['negociacoes'], 'readwrite')
+            .objectStore('negociacoes')
+            .add(negociacao)
+
+        request.onsuccess = e => console.log('negociação salva com sucesso!')
+        request.onerror = e => console.warn();('não foi possível salvar a negociação!')
+    }
+    ```
+
+    - **Cursores:** 
+
+    ```javascript
+    function listaTodos(){
+        const negociacoes = []
+        const cursor = connection
+            .transaction(['negociacoes'], 'readwrite')
+            .objectStore('negociacoes')
+            .openCursor()
+        
+        cursor.onsuccess = e => {
+            const negociacao = new Negociacao(
+                atual.value._data,
+                atual.value._quantidade,
+                atual.value._valor
+            )
+            negociacoes.push(negociacao)
+            atual.continue()
+        } //retorna em cada item acessado na objectStore
+        cursor.onserror = e => console.warn(`Error: ${e.targeterror.name}`)
+    }
+    ```
+    O método `listaTodos()` percorre a objectStore **negociacoes** iterando sobre cada item encontrado e armazenando no array negociacoes cada um deles. Como `atual.value` retorna objetos com as propriedades de negociacões, precisamos criar uma nova instância de Negociacao com cada item encontrado e armazenar essa instância no array negociacao.
+    
 - [ ] *Cap 15*: IndexedDB e Boas Práticas na conexão
 - [ ] *Cap 16*: Padrão de Projeto DAO
 - [ ] *Cap 17*: Sistema de Módulos JS e Babel

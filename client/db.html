@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprendendo IndexedDB</title>
+</head>
+<body>
+
+    <script>
+        // nossos testes entram aqui
+        let connection = null; //irá guardar a referência da conexão
+
+        //requisitando conexão com o indexedDB
+        const openRequest = indexedDB.open("jscangaceiro", 2)
+
+        openRequest.onupgradeneeded = e => {
+            console.log('Cria ou altera um banco já existente')
+            connection = e.target.result
+
+            if(connection.objectStoreNames.contains('negociacoes')){
+                connection.deleteObjectStore('negociacoes')
+            }
+
+            connection.createObjectStore('negociacoes', {autoIncrement:true})
+        }
+        openRequest.onsuccess = e => {
+            console.log('Conexão obtida com sucesso')
+            connection = e.target.result //é uma instância de IDBDatabase
+        }
+        openRequest.onerror = e => console.log(e.target.error)
+
+        function adiciona(){
+            const negociacao = new Negociacao(new Date(), 200, 1);
+            
+            const request = connection
+                .transaction(['negociacoes'], 'readwrite')
+                .objectStore('negociacoes')
+                .add(negociacao)
+            
+            request.onsuccess = e => console.log('negociação salva com sucesso!')
+            request.onerror = e => console.warn();('não foi possível salvar a negociação!')
+        }
+
+        function listaTodos(){
+            const negociacoes = []
+            const cursor = connection
+                .transaction(['negociacoes'], 'readwrite')
+                .objectStore('negociacoes')
+                .openCursor()
+            
+            cursor.onsuccess = e => {
+                const atual = e.target.result
+                //objeto ponteiro para uma negociação
+
+                if (atual){
+                    //se atual for diferente de NULL é porque ainda existem dados da negociação na store
+                    //assim, atual.value guarda os dados da negociação e atual.continue() passa para a próxima posição da store
+
+                    //como os dados iseridos na store são apenas objetos com as propriedades de negociação, precisamos criar uma nova
+                    //instância de negociacao antes de inserir no array negociacoes
+
+                    const negociacao = new Negociacao(
+                        atual.value._data,
+                        atual.value._quantidade,
+                        atual.value._valor
+                    )
+
+                    negociacoes.push(negociacao)
+                    atual.continue()
+                } else {
+                    //quando não houverem mais valores, atual será NULL e assim imprimimos a lista no console
+                    console.log(negociacoes)
+                }
+            }
+            cursor.onserror = e => console.warn(`Error: ${e.targeterror.name}`)
+        }
+    </script>
+    <script src="app/domain/negociacao/Negociacao.js"></script>
+</body>
+</html>
