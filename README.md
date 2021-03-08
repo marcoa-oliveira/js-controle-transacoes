@@ -420,7 +420,86 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
     ```
     O método `listaTodos()` percorre a objectStore **negociacoes** iterando sobre cada item encontrado e armazenando no array negociacoes cada um deles. Como `atual.value` retorna objetos com as propriedades de negociacões, precisamos criar uma nova instância de Negociacao com cada item encontrado e armazenar essa instância no array negociacao.
     
-- [ ] *Cap 15*: IndexedDB e Boas Práticas na conexão
+- [x] *Cap 15*: IndexedDB e Boas Práticas na conexão
+    
+    - Criação da `client/app/util/ConnectionFactory` que será responsável por lidar com as conexões com o indexedDB
+    - A classe tem um método estático `getConnection()` que retorna uma `Promise` pois **conexões com o banco são realizadas de maneira assíncrona**.
+    - A conexão precisa atender algumas regras:
+        - Uma única conexão para toda a aplicação. Independente de quantas chamadas forem feitas, getConnection deve retornar a mesma conexão.
+        - Apenas `ConnectionFactory` pode fechar a própria conexão. O método `.close()` não pode ser chamado por ninguém de fora.
+    - Antes da classe `ConnectionFactory` declaramos um array que armazena os nomes das stores disponíveis em nosso indexedDB.
+    - Foi criado o **método privado** `_createStores()`, que recebe a lógica de criação de stores e só deve ser chamado pela própria classe.
+    - Foi declarada também a variável `connection` para receber a conexão com o indexedDB e dentro da lógica da promise em `getConnection()` verificamos se já existe uma conexão criada na variável. Caso haja, essa conexão é enviada para `resolve`. Assim atendemos a regra da **conexão única**
+    -**Padrão de projeto MODULE PATTERN**: para evitar o vazamento de `stores` e `connection` para o escopo global, vamos envolver `ConnectionFactory` em uma função `tmp()`. Assim criamos um escopo onde as variáveis e seus valores só são acessíveis dentro desta função.
+    - Com esta ação, resolvemos a questão do acesso global às variáveis `stores` e `connection`, mas quebramos `getConnection()` da factory.
+    - Para tornar possível o acesso global à `getConnection()` e à própria classe `ConnectionFactory`, definimos que `tmp()` deve retornar a definição da classe. Esse retorno é passado para a chamada da função `tmp()` atribuído à variável `const ConnectionFactory`
+    - Agora, se tentarmos acessar `stores` ou `connection`, teremos um **undefined** pois não existem fora do escopo de `tmp()`, mas `getConnection()` existe no escopo global pois foi passado nas propriedades da classe `ConnectionFactory` para a variável global.
+    - **IIFE ou Função imediata**: criamos `tmp()` para encapsular as variáveis e métodos de `ConnectionFactory`, mas isso não nos impede de acessar `temp()` indefinidas vezes. Então vamos utilizar a abordagem de funções imediatas para que apenas `ConnectionFactory.js` seja capaz de realizar a própria chamada.
+    
+    **como estava antes, utilizando `tmp()`**
+    ```javascript
+        function tmp(){
+            const stores = ['negociacoes']
+            let connection = null
+
+            return class ConnectionFactory{
+                constructor(){
+                    //...
+                }
+                static getConnection(){
+                    //...
+                }
+                static _createStores(connection){
+                    //...
+                }
+            }
+        }
+        const ConnectionFactory = tmp()
+    ```
+
+    **como ficou utilizando IIFE**
+    ```javascript
+        const ConnectionFactory = (() => {
+            const stores = ['negociacoes']
+            let connection = null
+
+            return class ConnectionFactory{
+                constructor(){
+                    //...
+                }
+                static getConnection(){
+                    //...
+                }
+                static _createStores(connection){
+                    //...
+                }
+            }
+        })()
+    ```
+
+    - **Monkey Patch**: Modificação de uma API já existente. No caso deste projeto, é a alteração do **método `close()`** original da conexão existente, que passará a lançar uma excessão quando houver uma tentativa de acesso fora da própria conexão. **Atendendo assim à regra de que a conexão não pode ser encerrada pelo desenvolvedor através da conexão criada.**
+
+    Exemplo:
+    ```javascript
+    //o que queremos evitar
+    ConnectionFactory.getConnection().then(conn => conn.close())
+    ```
+
+    ```javascript
+    //como iremos evitar
+    //cliente/app/util/ConnectionFactory.js
+    //...
+    openRequest.onsuccess = e => {
+        connection = e.target.result;
+        connection.close = () => {      //alteração do método close() padrão!
+            throw new Error('A conexão não pode ser fechada diretamente!')
+        }
+        resolve(connection)
+    }
+    ```
+
+    - Para concluir, o método estático `closeConnection()` foi criado para lidar com o encerramento da conexão dentro da classe `ConnectionFactory`. Mais uma vez, `bind` foi utilizado para que o método close() não perdesse seu contexto.
+
 - [ ] *Cap 16*: Padrão de Projeto DAO
 - [ ] *Cap 17*: Sistema de Módulos JS e Babel
 - [ ] *Cap 18*: Promises, Async/await e padrões de projetos
