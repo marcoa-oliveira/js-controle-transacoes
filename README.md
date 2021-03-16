@@ -500,7 +500,91 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
 
     - Para concluir, o método estático `closeConnection()` foi criado para lidar com o encerramento da conexão dentro da classe `ConnectionFactory`. Mais uma vez, `bind` foi utilizado para que o método close() não perdesse seu contexto.
 
-- [ ] *Cap 16*: Padrão de Projeto DAO
+- [x] *Cap 16*: Padrão de Projeto DAO
+    - **DAO - Data Access Object**
+    - Classe `cleint/app/domain/negociacao/NegociacaoDao,js` responsável por lidar com detalhes da conexão. 
+    - Adotamos o **padrão** de que as classes DAO têm como nome, o nome da classe do **modelo persistido** + a terminação DAO.
+    - A classe DAO recebe uma conexão ao banco em seu construtor, assim podemos reutilizar a mesma classe em outro banco apenas passando a conexão correta.
+
+    ```javascript
+    const negociacao = new Negociacao(new Date(), 7, 100)
+    
+     ConnectionFactory
+        .getConnection() //retorna uma promise que fornece acesso à conexão
+        .then(conn => new NegociacaoDao(conn)) //com a conexão, retornamos uma instância de NegociacaoDao
+        .then(dao => dao.adiciona(negociacao)) //com NegociacaoDao acessível, passamos a negociacao a ser gravada
+        .then(msg => console.log(msg)) //como adiciona() é uma promise, este then só executa em caso de sucesso
+        .catch(err => console.log(err)) //se ocorrer algum erro em qualquer parte do processo, executa o catch
+
+    //Promise{[[PromiseStatus]]:"pending",[[PromiseValue]]:undefined}
+    ```
+
+    - Métodos de persistência DAO **retornam Promisses** pois persistência com IndexedDB é assíncrono.
+    - Como no exemplo acima, a `ConnectionFactory` cria uma conexão ao IndexedDB e com a conexão criada, utilizamos NegociacaoDao para lidar com a negociacação criada e gravá-la no banco. 
+    
+    ```javascript
+    ConnectionFactory
+        .getConnection()
+        .then(conn => new NegociacaoDao(conn)) //**obs1
+        .then(dao => dao.listaTodos())
+        .then(negociacoes => console.log(negociacoes))
+        .catch(err => console.log(err));
+
+        //Promise {<pending>}
+        //[Negociacao]   -------> retorna um array com todas as negociações persistidas
+
+        //OBS1: errar a chamada da classe (ex.: chamar Negociacao) pode resultar em um .getDate() is not a function ou outro erro
+    ```
+
+    - Nesse momento, temos os dois métodos DAO criados, mas sempre que precisamos de um deles, somos obrigados a criar uma conexão. Iremos resolver isso com uma **DAOFactory**
+    - `client/app/util/DaoFactory.js` - será a classe responsável por isolar a criação da DAO.
+
+    ```javascript
+        DaoFactory.getNegociacaoDao().then(dao => console.log(dao))
+        //retorna uma instância de NegociacaoDao no console
+    ```
+
+    - Com toda a infraestrutura pronta, podemos partir para a persistência das negociações. Em `NegociacaoController` precisamos alterar o método `adiciona()` para que realize a persistência da negociação do formulário.
+    - Alteramos o método para que a **inclusão das negociações na tabela (view) só seja realizada caso a inclusão das negociações no banco seja realizada com sucesso**.
+    - Para exibir todas as negociações, vamos alterar o **construtor** de `NegociacaoController` para que faça a chamada do método `listaTodos()` de `NegociacaoDao` logo que for instanciado. Agora, ao abrir a aplicação, já é apresentada uma lista das negociações presentes na store.
+    - Funciona, mas por uma questão de **boas práticas**, devemos **isolar todo o código de inicialização que não diga respeito à própria classe** em um método isolado.
+    
+    ```javascript
+    class exemplo {
+        constructor(){
+            let x = 0
+            let y = 0
+            //...
+            this._init() //chamada do código isolado
+        }
+
+        _init(){
+            //...código que faz a chamada de métodos de outra classe utilizados pelos construtor da classe exemplo
+        }
+    }
+    ```
+    
+    - Ainda precisamos incluir um método de **remoção** das negociações em `NegociacaoDao`.
+    - Assim, incluímos o método `apagaTodos()` em `NegociacaoDao` e alteramos o método `apaga()` de `NegociacaoController` para utilizar o método.
+    - Alteramos a declaração da classe `NegociacaoDao` para que haja apenas a declaração do método `getNegociacaoDao()` e alteramos o consumo deste método em `NegociacaoController`.
+    - **Quando utilizamos apenas um método, não é necessário a declaração de uma classe exclusiva para esse método, podemos apenas realizar a declaração da função**
+    
+    ```javascript
+        class exemplo{
+            static getExemplo(){
+                //código omitido
+            }
+        }
+    ``` 
+
+    podemos trocar por:
+
+    ```javascript
+        function getExemplo(){
+            //código omitido
+        }
+    ``` 
+
 - [ ] *Cap 17*: Sistema de Módulos JS e Babel
 - [ ] *Cap 18*: Promises, Async/await e padrões de projetos
 - [ ] *Cap 19*: Padrão de Projeto Decorator, Fetch API, Metaprogramação com `reflect-metadata`

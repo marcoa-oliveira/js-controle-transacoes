@@ -6,6 +6,8 @@ class NegociacaoController{
         this._inputQuantidade = $('#quantidade')
         this._inputValor = $('#valor')
 
+        this._init()
+
         this._negociacoes = new Bind(
             new Negociacoes(),
             new NegociacoesView('#negociacoes'),
@@ -25,9 +27,26 @@ class NegociacaoController{
 
         try {
             event.preventDefault()
-            this._negociacoes.adiciona(this._criaNegociacao())
-            this._mensagem.texto = 'Negociação adicionada com sucesso!'
-            this._limpaFormulario()
+            
+            // this._negociacoes.adiciona(this._criaNegociacao())
+            // this._mensagem.texto = 'Negociação adicionada com sucesso!'
+            // this._limpaFormulario()
+            // a inclusão na tabela e limpeza do form passam a depender da inclusão no banco ou não
+
+            const negociacao = this._criaNegociacao()
+
+            // DaoFactory
+            //     .getNegociacaoDao()
+            getNegociacaoDao()
+                .then(dao => dao.adiciona(negociacao))
+                .then(() => {
+                    //só inclui na tabela se conseguir incluir no banco antes
+                    this._negociacoes.adiciona(negociacao)
+                    this._mensagem.texto = 'Negociação adicionada com sucesso!'
+                    this._limpaFormulario()
+                })
+                .catch(err => this._mensagem.texto = err)
+
         } catch (err) {            
             if(err instanceof DataInvalidaException){ //testa se o erro é de data e exibe a msg ao usuário caso positivo
                 this._mensagem.texto = err.message
@@ -53,73 +72,20 @@ class NegociacaoController{
     }
 
     apaga(){ 
-        this._negociacoes.esvazia()
-        this._mensagem.texto = `Negociações apagadas com sucesso!`
+        //método alterado para utilizar DaoFactory
+        // DaoFactory
+        //     .getNegociacaoDao()
+        getNegociacaoDao()
+            .then(dao => dao.apagaTodos())
+            .then(() => {
+                this._negociacoes.esvazia()
+                this._mensagem.texto = `Negociações apagadas com sucesso!`
+            })
+            .catch(err => this._mensagem.texto = err)
     }
 
     importaNegociacoes(){
         
-        // this._service.obterNegociacaoDaSemana((err, negociacoes) => {
-        //     if(err){
-        //         this._mensagem.texto = 'Não foi possível obter as negociações da semana!'
-        //         return
-        //     }
-
-        //     negociacoes.forEach(negociacao => {
-        //         this._negociacoes.adiciona(negociacao)
-        //     });
-
-        //     this._mensagem.texto = 'Negociações importadas com sucesso'
-        // }) ALTERADO PARA PADRÃO PROMISE
-
-        // const negociacoes = []
-
-        // this._service.obterNegociacaoDaSemana()
-        //     .then(semana => {
-        //         negociacoes.push(...semana) //spread operator
-        //         //quando retornamos uma promise, seu retorno é acessível ao encadear uma chamada à then
-        //         return this._service.obtemNegociacoesDaSemanaAnterior()
-        //     })
-        //     .then(anterior => {
-        //         negociacoes.push(...anterior)
-        //         negociacoes.forEach(negociacao => this._negociacoes.adiciona(negociacao))
-        //     })
-        //     .then(retrasada => {
-        //         negociacoes.push(...retrasada)
-        //         negociacoes.forEach(negociacao => this._negociacoes.adiciona(negociacao))
-        //         this._mensagem.texto = 'Negociações importadas com sucesso!'
-        //     })
-        //     .catch(err => this._mensagem.texto = err) ALTERADO PARA O USO DE PROMISE.ALL()
-
-        // this._service.obterNegociacaoDaSemana().then( //recebe dois parâmetros (cb) -  
-        //     negociacoes => { //---------> negociacoes recebe o retorno da operação assinc.
-        //         negociacoes.forEach(negociacao => this._negociacoes.adiciona(negociacao))
-        //         this._mensagem.texto = 'Negociações importadas com sucesso'
-        //     },
-        //     err => this._mensagem.texto = err  //err dá acesso aos possíveis erros
-        // )
-
-        // Promise.all([
-        //     this._service.obtemNegociacaoDaSemana(), //array em index 0
-        //     this._service.obtemNegociacoesDaSemanaAnterior(), //array em index 1
-        //     this._service.obtemNegociacoesDaSemanaRetrasada() //array em index 2
-        // ])
-        // .then(periodo => {
-        //     //periodo é um array de arrays com 3 elementos
-            
-        //     periodo = periodo.reduce((novoArray, item) => novoArray.concat(item), []) //.1
-        //         .forEach(negociacao => this._negociacoes.adiciona(negociacao)) //2.
-            
-        //     this._mensagem.texto = 'Negociações importadas com sucesso!'
-            
-        //     //1. achata os 3 arrays em um array de dimensão única (flaten)
-        //     //1. periodo passa a ter a quantidade total de elementos dos 3 arrays
-        //     //2. insere as negociações importadas na lista de negociações da view
-
-        //     console.log(periodo)
-        // })
-        // .catch(err => this._mensagem.texto = err) RESPONSABILIDADE PASSADA PARA negociacaoService.js/obtemNegociacoesdoPeriodo()
-
         this._service  //agora importa utilizando o método obtemNegociacoesDoPeriodo() de negociacaoService.js
             .obtemNegociacoesDoPeriodo()
             .then(negociacoes => {
@@ -130,6 +96,16 @@ class NegociacaoController{
                 this._mensagem.texto = 'Negociacoes importadas com sucesso!'
             })
             .catch(err => this._mensagem.texto = err) 
+    }
+
+    _init(){
+        // DaoFactory //chamada do método listaTodos() de DaoFactory
+        //     .getNegociacaoDao()
+        getNegociacaoDao() //alterado devido mudança na declaração de DaoFactory
+            .then(dao => dao.listaTodos())
+            .then(negociacoes => 
+                negociacoes.forEach(negociacao => this._negociacoes.adiciona(negociacao)))
+            .catch(err => this._mensagem.texto = err)
     }
 
 }
