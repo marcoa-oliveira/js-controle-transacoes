@@ -1,39 +1,45 @@
-var campos = [
-    document.querySelector('#data'),
-    document.querySelector('#valor'),
-    document.querySelector('#quantidade')
-]
+System.register([], function (_export, _context) {
+    "use strict";
 
-var tbody = document.querySelector('table tbody')
+    var campos, tbody;
+    return {
+        setters: [],
+        execute: function () {
+            campos = [document.querySelector('#data'), document.querySelector('#valor'), document.querySelector('#quantidade')];
+            tbody = document.querySelector('table tbody');
 
-document.querySelector('.form').addEventListener('submit', function(event) {
-    
-    //preventDefault() impede que o formulário realize o submit e recarregue a página
-    event.preventDefault()
 
-    var tr = document.createElement('tr')
+            document.querySelector('.form').addEventListener('submit', function (event) {
 
-    //cria uma td, insere o valor do campo e adiciona a td na tr
-    campos.forEach(function(campo) {
-        var td = document.createElement('td')
-        td.textContent = campo.value
-        tr.appendChild(td)
-    })
+                //preventDefault() impede que o formulário realize o submit e recarregue a página
+                event.preventDefault();
 
-    //o campo volume representa o valor total da negociação e precisa ser calculado fora do foreach
-    var tdVolume = document.createElement('td')
-    tdVolume.textContent = campos[1].value * campos[2].value
-    tr.appendChild(tdVolume)
+                var tr = document.createElement('tr');
 
-    //adiciona a tr completa ao tbody
-    tbody.appendChild(tr)
+                //cria uma td, insere o valor do campo e adiciona a td na tr
+                campos.forEach(function (campo) {
+                    var td = document.createElement('td');
+                    td.textContent = campo.value;
+                    tr.appendChild(td);
+                });
 
-    //limpa os campos do form
-    campos.forEach(function(campo){
-        campo.value = ''
-    })
+                //o campo volume representa o valor total da negociação e precisa ser calculado fora do foreach
+                var tdVolume = document.createElement('td');
+                tdVolume.textContent = campos[1].value * campos[2].value;
+                tr.appendChild(tdVolume);
 
-    //define o foco para o primeiro campo novamente
-    campos[0].focus()
+                //adiciona a tr completa ao tbody
+                tbody.appendChild(tr);
 
-})
+                //limpa os campos do form
+                campos.forEach(function (campo) {
+                    campo.value = '';
+                });
+
+                //define o foco para o primeiro campo novamente
+                campos[0].focus();
+            });
+        }
+    };
+});
+//# sourceMappingURL=index.js.map

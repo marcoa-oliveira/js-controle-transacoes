@@ -1,18 +1,32 @@
-class MensagemView extends View{ //extends faz com que a classe herde funcionalidades da classe View
+System.register(["./View.js"], function (_export, _context) {
+    "use strict";
 
-    // constructor(seletor){
-    //     this._elemento = document.querySelector(seletor)
+    var View;
+    return {
+        setters: [function (_ViewJs) {
+            View = _ViewJs.View;
+        }],
+        execute: function () {
+            class MensagemView extends View {
+                //extends faz com que a classe herde funcionalidades da classe View
 
-    // } fará uso do construtor da classe View
+                // constructor(seletor){
+                //     this._elemento = document.querySelector(seletor)
 
-    template(model){
-        return model.texto
-            ? `<p class="alert alert-info">${model.texto}</p>`
-            : `<p></p>`
-            //em caso de qualquer coisa diferente de uma string com texto, retorna um parágrafo sem as classes do bootstrap
-    }
+                // } fará uso do construtor da classe View
 
-    // update(model){
-    //     this._elemento.innerHTML = this.template(model)
-    // }  fará uso do update da classe View
-}
+                template(model) {
+                    return model.texto ? `<p class="alert alert-info">${model.texto}</p>` : `<p></p>`;
+                    //em caso de qualquer coisa diferente de uma string com texto, retorna um parágrafo sem as classes do bootstrap
+                }
+
+                // update(model){
+                //     this._elemento.innerHTML = this.template(model)
+                // }  fará uso do update da classe View
+            }
+
+            _export("MensagemView", MensagemView);
+        }
+    };
+});
+//# sourceMappingURL=MensagemView.js.map

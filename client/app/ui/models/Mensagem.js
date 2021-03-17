@@ -1,22 +1,35 @@
-class Mensagem {
-    
-    constructor(texto = ''){  //podemos também passar o valor default direto no atributo do construto -> constructor(texto = '')
-        
-        // if (!texto){
-        //     texto = ''
-        // }
+System.register([], function (_export, _context) {
+    "use strict";
 
-        // this._texto = texto  isso pode ser simplificado da maneira abaixo:
+    return {
+        setters: [],
+        execute: function () {
+            class Mensagem {
 
-        this._texto = texto || ''  //se o valor for diferente de null, undefined, 0 ou não for uma string vazia, o valor recebido será atribuido
-                                   //caso contrário recebe uma string vazia
-    }
+                constructor(texto = '') {
+                    //podemos também passar o valor default direto no atributo do construto -> constructor(texto = '')
 
-    get texto(){
-        return this._texto
-    }
+                    // if (!texto){
+                    //     texto = ''
+                    // }
 
-    set texto(texto){
-        this._texto = texto
-    }
-}
+                    // this._texto = texto  isso pode ser simplificado da maneira abaixo:
+
+                    this._texto = texto || ''; //se o valor for diferente de null, undefined, 0 ou não for uma string vazia, o valor recebido será atribuido
+                    //caso contrário recebe uma string vazia
+                }
+
+                get texto() {
+                    return this._texto;
+                }
+
+                set texto(texto) {
+                    this._texto = texto;
+                }
+            }
+
+            _export('Mensagem', Mensagem);
+        }
+    };
+});
+//# sourceMappingURL=Mensagem.js.map
