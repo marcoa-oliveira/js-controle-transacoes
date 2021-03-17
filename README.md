@@ -585,7 +585,111 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
         }
     ``` 
 
-- [ ] *Cap 17*: Sistema de Módulos JS e Babel
+- [x] *Cap 17*: Sistema de Módulos JS e Babel
+    - **Sistema de Módulos**: 
+        - Cada *script é um módulo por padrão* que esconde seu código interno do mundo externo;
+        - A instrução `import` permite que *artefatos de outros módulos* sejam importados, mas somente *artefatos exportados* (`export`) podem ser importados;
+        - O `loader` será responsável por carregar o primeiro módulo e resolver dependências, poupando o desenvolvedor do cuidado na ordem de importação.
+        - **Neste projeto**, utilizaremos a biblioteca [System.js](https://github.com/systemjs/systemjs) como *loader universal*.
+        - Em `..\js-controle-transacoes\client`:
+        
+        ```console
+            ..client: npm init
+            .
+            .
+            .
+            ..client: npm install systemjs --save
+        ```
+
+        - `npm init` gera o arquivo **package.json** responsãvel por guardar o *nome* e *versão* de todas as dependências baixadas pelo npm.
+        - `npm install systemjs --save` instala o módulo *system.js* e salva suas informações em *package.json*
+        - Ao terminar de executar a instalação, tanto o *System.js* quanto suas dependências estarão salvas em `..\client\node_modules`
+        - Agora já podemos **remover todas as importações** de script em `index.html` e começar a passar essa responsabilidade para *System.js*, pois nossos scripts se tornarão *módulos*
+            
+            > Acidentalmente eu incluí como dependência o pacote System.js mais recente e não a versão especificada no livro (0.20.12) e não deu certo a realização dos passos seguintes. Removi a dependência `npm uninstall systemjs` e refiz o passo de instalação. Deu certo.
+        
+        - Para saber se a primeira alteração deu certo, ou seja, saber se passar a responsabilidade de **importar o módulo** `app.js` para *System.js* funcionou, precisamos subir o servidor disponibilizado no projeto, pois o *System.js* **baixa os módulos através de requisições assíncronas com XMLHttpRequest**.
+        - Neste primeiro momento, a *importação de app.js* deu certo, mas recebemos uma mensagem de erro pois não temos as outras dependências solucionadas.
+        - Analisando `app.js` podemos notar que sua única dependência é `NegociacaoController.js`, por isso vamos realizar a importação.
+
+        ```javascript
+        // app\app.js
+        import {NegociacaoController} from './controllers/NegociacaoController.js'
+
+        const controller = new NegociacaoController()
+        const $ = document.querySelector.bind(document)
+        
+        //...resto do código omitido...
+        ``` 
+
+        Isso não resolve o problema, pois ainda não declaramos a permissão para a exportação da classe em `NegociacaoController.js`
+
+        ```javascript
+        // ./controller/NegociacaoControler.js
+        export class NegociacaoController {
+            //código omitido
+        }
+        ```
+
+        - Também foi realizada a importação das dependências em todos os outros módulos do projeto.
+        - Em `ConnectionFactory` já podemos remover o *IIFE* pois com o padrão de módulos, as variáveis e métodos ficam *automáticamente inacessíveis* fora dele.
+        - Mesmo realizando todo o processo de *import* e *export* de dependências, ainda teremos uma mensagem de erro no console ao recarregarmos a página:
+
+        ```javascript
+        TypeError: Unable to dynamically transpile ES module
+        A loader plugin needs to be configured via `SystemJS.config({ transpiler: 'transpiler-module' })`.
+        at Qe (instantiate.js:462)
+        at instantiate.js:241
+        ```
+
+        - A mensagem de erro informa que *System.js* não consegue realizar as importações dos módulos **sem o auxílio de um TRANSCOMPILADOR (*transpiler*)**
+        - **TRANSPILER:** é um compilador que permite **realizar transformações** no código, adicionar código extra ou mesmo **traduzir** o código-fonte para outra linguagem.
+        - Esse processo **pode ser realizado diretamente no navegador, mas é uma questão problemática em produção**, pois impacta no tempo de processamento da aplicação, *impactando o tempo de carregamento da página* e, consequentemente, o **Ranking de Pesquisa Orgânica do Google**.
+        - Neste caso, o [Babel](https://babeljs.io) é o mais indicado, pois roda localmente (*em tempo de desenvolvimento*) e gera os arquivos modificados que serão carregados pelo navegador.
+        
+        - Ajustes necessários para a instalação configuração do Babel
+            - **Renomear** a pasta `./client/app` -> `./client/app-src`: O sufixo `src` indica que a pasta armazena os arquivos originais do projeto
+            - **Instalar** via NPM em `./client/` o *babel-cli*: `npm install babel-cli@6.24.1 --save-dev`
+            - **Instalar** o plugin que adequa os módulos do ES2015 ao sistema de carregamento do *System.js*: `npm install babel-plugin-transform-es2015-modules-systemjs@6.24.1 --save-dev` 
+            - **Criar o arquivo** `./client/.babelrc` e declarar nele que o módulo instalado deve ser utilizado.
+            - **Adicionar** um script em `./client/package.json` chamado *build* dentro da tag *scripts*
+            
+            ```javascript
+            //...
+            "scripts":{
+                //..
+                "build": "babel app-src -d app --source-map"
+            }
+            ```
+
+            - Agora podemos testar se tudo está ok rodando o comando `./client: npm run build`.
+        
+        - Ao utilizar o *babel* estamos utilizando um **build step** em nosso projeto, sendo assim, nossa aplicação não pode ser diretamente consumida sem passar por esse processo.
+        - Instalamos também o *plugin* que permite ao *babel* a transformação dos nosso módulos (que no arquivo original seguem o padrão ES2015) para o formato do sistema de carregamento do *System.js*
+        - O arquivo `.babelrc` é o responsável por listar o que o Babel deve utilizar, no caso desta instalação, a primeira inclusão é justamento o plugin de transformação dos módulos.
+        - O script *build* carrega a instrução que o babel deve executar com nosso projeto, no caso, gerar a pasta **app** e os respectivos **source-map**. 
+        - Ao rodar a build, geramos a pasta `./client/app` mas, *diferente daquela que foi inicialmente renomeada*, esta possui nosso código transpilado e o **source-map**. de cada arquivo. Assim, quando um erro for identificado pelo navegador, ele apontara a linha no arquivo transpilado, mas podemos utiliar o *sourcemap* para localizar no arquivo original.
+
+        > Encontrei alguns problemas ao fazer o *build* da aplicação. Alguns módulos estavam quebrando por erro de digitação nas importações.
+        > A função `getNegociacaoDao()` está caindo em um `Type error: getNegociacaoDao is not a function` apontando para `NegociacaoControler._init()`. **SOLUÇÃO**: Havia um erro na importação do módulo `DaoFactory.js` em `NegociacaoControler` apontando para o módulo errado. Também havia um erro no próprio método, não havia sido removido o IIFE corretamente.
+
+        - Para evitar a necessidade de *roda um build* a cada alteração no código original, vamos adicionar um **watcher** do Babel no `package.json`.
+        - Como pode ser observado, utilizamos muitos *imports* em `NegociacaoControler`, muitos deles originários da mesma pasta. Podemos simplificar esse tipo de situação utilizando **barrels**.
+        - **Barrels**: um barrel é um *módulo que importa e exporta os módulos que importou* possibilitando importar em uma única instrução vários artefatos exportados pelo barrel. *Partindo do ponto de vista que cada pasta do projeto é um barril cheio de coisas*
+        - Precisamos criar *pontos de entrada* para os módulos:
+            - `./client/app-src/domain/index.js`
+            - `./client/app-src/ui/index.js`
+            - `./client/app-src/util/index.js`
+        
+        - Os arquivos **index.js** vão receber a lista de exportações dos *barris* em que estão.
+        - Com as listas de exportações definidas, podemos alterar `NegociacaoControler`.
+
+        ```javascript
+        //client/app-src/controlers/NegociacaoControler.js
+        import { Negociacoes, Negociacaoservice, Negociacao} from '../domain/index.js'
+        //os outros imports seguem o mesmo modelo...
+        ```
+        
 - [ ] *Cap 18*: Promises, Async/await e padrões de projetos
 - [ ] *Cap 19*: Padrão de Projeto Decorator, Fetch API, Metaprogramação com `reflect-metadata`
 - [ ] *Cap 20*: Webpack, Boas práticas em desenvolvimento e produção, Deploy no GithubPages
