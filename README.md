@@ -177,7 +177,7 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
             .map((item, indice) => item - indice % 2 ))
     ``` 
 
-    - **Exceções**: Tratamento de exceções lançadas com `throws`. Dentro do bloco `try`, temos a instrução que pode, ou não, ocasionar uma excessão. Em caso positivo, o fluxo do código é direcionado para o bloco `catch`, que recebe como parâmetro um objeto com informações da exceção lançada.
+    - **Exceções**: Tratamento de exceções lançadas com `throws`. Dentro do bloco `try`, temos a instrução que pode, ou não, ocasionar uma exceção. Em caso positivo, o fluxo do código é direcionado para o bloco `catch`, que recebe como parâmetro um objeto com informações da exceção lançada.
     - Método `adiciona()` de `NegociacaoController` alterado para a estrutura **try-catch**
     - Podemos realizar um tratamento das mensagens apresentadas ao usuário em casos de exceções, pois não há interesse que mensagens ocasionadas por erros de sintaxe no código sejam apresentadas em tela ao usuário. Assim, criamos nossas próprias exceções e utilizamos `instanceof` para obter o tipo de de exceção lançada.
     - Como as classes de tratamento das exceções são extendidas de `error` (por exemplo `DataInvalidaException`) precisamos forçar a identificação da origem das mensagens de error, pois a msg disparada no console atribui a origem a classe errada (no caso, Error) e não a classe `DataInvalidaException`. Assim, podemos fazer o uso de:
@@ -477,7 +477,7 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
         })()
     ```
 
-    - **Monkey Patch**: Modificação de uma API já existente. No caso deste projeto, é a alteração do **método `close()`** original da conexão existente, que passará a lançar uma excessão quando houver uma tentativa de acesso fora da própria conexão. **Atendendo assim à regra de que a conexão não pode ser encerrada pelo desenvolvedor através da conexão criada.**
+    - **Monkey Patch**: Modificação de uma API já existente. No caso deste projeto, é a alteração do **método `close()`** original da conexão existente, que passará a lançar uma exceção quando houver uma tentativa de acesso fora da própria conexão. **Atendendo assim à regra de que a conexão não pode ser encerrada pelo desenvolvedor através da conexão criada.**
 
     Exemplo:
     ```javascript
@@ -645,35 +645,38 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
         - A mensagem de erro informa que *System.js* não consegue realizar as importações dos módulos **sem o auxílio de um TRANSCOMPILADOR (*transpiler*)**
         - **TRANSPILER:** é um compilador que permite **realizar transformações** no código, adicionar código extra ou mesmo **traduzir** o código-fonte para outra linguagem.
         - Esse processo **pode ser realizado diretamente no navegador, mas é uma questão problemática em produção**, pois impacta no tempo de processamento da aplicação, *impactando o tempo de carregamento da página* e, consequentemente, o **Ranking de Pesquisa Orgânica do Google**.
-        - Neste caso, o [Babel](https://babeljs.io) é o mais indicado, pois roda localmente (*em tempo de desenvolvimento*) e gera os arquivos modificados que serão carregados pelo navegador.
         
-        - Ajustes necessários para a instalação configuração do Babel
-            - **Renomear** a pasta `./client/app` -> `./client/app-src`: O sufixo `src` indica que a pasta armazena os arquivos originais do projeto
-            - **Instalar** via NPM em `./client/` o *babel-cli*: `npm install babel-cli@6.24.1 --save-dev`
-            - **Instalar** o plugin que adequa os módulos do ES2015 ao sistema de carregamento do *System.js*: `npm install babel-plugin-transform-es2015-modules-systemjs@6.24.1 --save-dev` 
-            - **Criar o arquivo** `./client/.babelrc` e declarar nele que o módulo instalado deve ser utilizado.
-            - **Adicionar** um script em `./client/package.json` chamado *build* dentro da tag *scripts*
-            
-            ```javascript
-            //...
-            "scripts":{
-                //..
-                "build": "babel app-src -d app --source-map"
-            }
-            ```
+    - **Babel**
 
-            - Agora podemos testar se tudo está ok rodando o comando `./client: npm run build`.
+    - Neste caso, o [Babel](https://babeljs.io) é o mais indicado, pois roda localmente (*em tempo de desenvolvimento*) e gera os arquivos modificados que serão carregados pelo navegador.
+    
+    - Ajustes necessários para a instalação configuração do Babel
+        - **Renomear** a pasta `./client/app` -> `./client/app-src`: O sufixo `src` indica que a pasta armazena os arquivos originais do projeto
+        - **Instalar** via NPM em `./client/` o *babel-cli*: `npm install babel-cli@6.24.1 --save-dev`
+        - **Instalar** o plugin que adequa os módulos do ES2015 ao sistema de carregamento do *System.js*: `npm install babel-plugin-transform-es2015-modules-systemjs@6.24.1 --save-dev` 
+        - **Criar o arquivo** `./client/.babelrc` e declarar nele que o módulo instalado deve ser utilizado.
+        - **Adicionar** um script em `./client/package.json` chamado *build* dentro da tag *scripts*
         
-        - Ao utilizar o *babel* estamos utilizando um **build step** em nosso projeto, sendo assim, nossa aplicação não pode ser diretamente consumida sem passar por esse processo.
-        - Instalamos também o *plugin* que permite ao *babel* a transformação dos nosso módulos (que no arquivo original seguem o padrão ES2015) para o formato do sistema de carregamento do *System.js*
-        - O arquivo `.babelrc` é o responsável por listar o que o Babel deve utilizar, no caso desta instalação, a primeira inclusão é justamento o plugin de transformação dos módulos.
-        - O script *build* carrega a instrução que o babel deve executar com nosso projeto, no caso, gerar a pasta **app** e os respectivos **source-map**. 
-        - Ao rodar a build, geramos a pasta `./client/app` mas, *diferente daquela que foi inicialmente renomeada*, esta possui nosso código transpilado e o **source-map**. de cada arquivo. Assim, quando um erro for identificado pelo navegador, ele apontara a linha no arquivo transpilado, mas podemos utiliar o *sourcemap* para localizar no arquivo original.
+        ```javascript
+        //...
+        "scripts":{
+            //..
+            "build": "babel app-src -d app --source-map"
+        }
+        ```
 
-        > Encontrei alguns problemas ao fazer o *build* da aplicação. Alguns módulos estavam quebrando por erro de digitação nas importações.
-        > A função `getNegociacaoDao()` está caindo em um `Type error: getNegociacaoDao is not a function` apontando para `NegociacaoControler._init()`. **SOLUÇÃO**: Havia um erro na importação do módulo `DaoFactory.js` em `NegociacaoControler` apontando para o módulo errado. Também havia um erro no próprio método, não havia sido removido o IIFE corretamente.
+        - Agora podemos testar se tudo está ok rodando o comando `./client: npm run build`.
+    
+    - Ao utilizar o *babel* estamos utilizando um **build step** em nosso projeto, sendo assim, nossa aplicação não pode ser diretamente consumida sem passar por esse processo.
+    - Instalamos também o *plugin* que permite ao *babel* a transformação dos nosso módulos (que no arquivo original seguem o padrão ES2015) para o formato do sistema de carregamento do *System.js*
+    - O arquivo `.babelrc` é o responsável por listar o que o Babel deve utilizar, no caso desta instalação, a primeira inclusão é justamento o plugin de transformação dos módulos.
+    - O script *build* carrega a instrução que o babel deve executar com nosso projeto, no caso, gerar a pasta **app** e os respectivos **source-map**. 
+    - Ao rodar a build, geramos a pasta `./client/app` mas, *diferente daquela que foi inicialmente renomeada*, esta possui nosso código transpilado e o **source-map**. de cada arquivo. Assim, quando um erro for identificado pelo navegador, ele apontara a linha no arquivo transpilado, mas podemos utiliar o *sourcemap* para localizar no arquivo original.
 
-        - Para evitar a necessidade de *roda um build* a cada alteração no código original, vamos adicionar um **watcher** do Babel no `package.json`.
+    > Encontrei alguns problemas ao fazer o *build* da aplicação. Alguns módulos estavam quebrando por erro de digitação nas importações.
+    > A função `getNegociacaoDao()` está caindo em um `Type error: getNegociacaoDao is not a function` apontando para `NegociacaoControler._init()`. **SOLUÇÃO**: Havia um erro na importação do módulo `DaoFactory.js` em `NegociacaoControler` apontando para o módulo errado. Também havia um erro no próprio método, não havia sido removido o IIFE corretamente.
+
+    - Para evitar a necessidade de *roda um build* a cada alteração no código original, vamos adicionar um **watcher** do Babel no `package.json`.
         - Como pode ser observado, utilizamos muitos *imports* em `NegociacaoControler`, muitos deles originários da mesma pasta. Podemos simplificar esse tipo de situação utilizando **barrels**.
         - **Barrels**: um barrel é um *módulo que importa e exporta os módulos que importou* possibilitando importar em uma única instrução vários artefatos exportados pelo barrel. *Partindo do ponto de vista que cada pasta do projeto é um barril cheio de coisas*
         - Precisamos criar *pontos de entrada* para os módulos:
@@ -689,8 +692,153 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
         import { Negociacoes, Negociacaoservice, Negociacao} from '../domain/index.js'
         //os outros imports seguem o mesmo modelo...
         ```
-        
-- [ ] *Cap 18*: Promises, Async/await e padrões de projetos
+
+- [x] *Cap 18*: Promises, Async/await e padrões de projetos
+    
+    - Utilizamos *Promises* para evitar o *Callback Hell* e centralizar o tratamento de erros das promises envolvidas na operação. Um bom exemplo disso é o método `_init()`:
+
+    ```javascript
+    _init(){
+        getNegociacaoDao()
+            .then(dao => dao.listaTodos())
+            .then(negociacoes => negociacoes.forEach(negociacao => this._negociacoes.adiciona(negociacao)))
+            .catch(err => this._mensagem.texto = err) //TRATA O ERRO EM APENAS UM LUGAR
+    }
+    ```
+
+    - O problema é que, mesmo utilizando essa estrutura de promises, o código não é tão **legível** quanto um código **síncrono e bloqueante**.
+    
+    ```javascript
+    //exemplo com bloco try-catch
+    _init(){
+        try{
+            const dao = getNegociacaoDao() //bloq. a execução enquanto a promise não é resolvida
+            const negociacoes = dao.listaTodos() //novamente bloq. a execução enquanto a promise não é resolvida
+            negociacoes.forEach(negociacao => this._negociacoes.adiciona(negociacao))
+        }catch(err){
+            this._mensagem.texto = err
+        }
+    }
+    ``` 
+
+    - Como `getNegociacaoDao` e `dao.listaTodos` são métodos *síncronos e bloqueantes* podemos capturar suas excessões através de cláusulas *try-catch*, já que o erro acontece na mesma pilha de execução. O problema dessa abordagem é que se uma das promises demora para responder, a aplicação congela enquanto não receber um retorno.
+
+    **Async - Await**
+
+    ```javascript
+    async _init(){
+        try{
+            const dao = await getNegociacaoDao()
+            const negociacoes = await dao.listaTodos()
+            negociacoes.forEach(negociacao => this._negociacoes.adiciona(negociacao))
+        }catch(err){
+            this._mensagem.texto = err
+        }
+    }
+    ```
+
+    - A abordagem acima é muito semelhante à anterior, síncrona. A diferença está nas instruçãos **async** e **await**.
+    - **Async** indica que o método está preparado para lidar com operações assíncronas separadamente.
+    - **Await** esta chamada antes dos métodos que retornam promises faz com que o bloco do método `_init()` seja suspenso da pilha de execução principal da aplicação, assim, a *aplicação segue sua execução normal enquanto as promises são resolvidas*. O retorno da promise faz com que o bloco retorne para a pilha principal.
+    - Quando a *promise* (assíncrona e não bloqueante) é resolvida, internamente ocorre o **resume** do método `_init()`, retornando a pilha principal e ficando disponível para o *Event Loop*
+    - **Generators**: São funções que permitem *Suspender ou Resumir* sua execução em qualquer ponto do bloco, mantendo o contexto original e podem retornar um valor mesmo sem a instrução `return`.
+
+    ```javascript
+    //exemplo
+    function* minhaFuncaoGeradora(){
+        for (let i = 0; i < 3; i++){
+            //instrução yield! Suspende a execução do blocoda função e retorna o valor de i
+            yield i
+        }
+
+    }
+
+    let it = minhaFuncaoGeradora()
+    
+    //executa o bloco do GENERATOR, que será suspenso assim que encontrar a expressão yield
+    let objeto = it.next()
+
+    console.log(objeto.value) // 0 é o valor de i
+    console.log(objeto.done) //false, ainda não terminou
+    ```
+
+    - Funções geradoras são declaradas com a keyword `function` seguida de `*` e retornam não um resultado, mas um **iterator**, um tipo de objeto especial que permite *resumir o generator* e, eventualmente, extrair valores.
+    - `Yield` é a instrução responsável por suspender a execução do bloco do gerador e, quando especificado, retornar um valor acessível pelo iterator.
+    - A instrução `.next()` (*do Iterator retornado*) faz com que o bloco da função geradora seja executado até que se depare com a instrução `yield` que irá suspendê-la. Essa chamada é obrigatória ao menos uma vez, pois *quando executamos uma função geradora*, ela não será executada inicialmente. Essa instrução **retorna um objeto** que possui as propriedades `value` e `done`. **Value** é qualquer valor retornado pela instrução. **Done** retorna um status *true* ou *false* sobre a conclusão do bloco da função do gerador. 
+    - Cada chamada da instrução `.next()` promove uma execução da função. No exemplo acima, a **próxima chamada** de `it.next()` resultaria em uma nova execução da função e, consequentemente, `objeto.value` retornaria `i = 1` e `objeto.done = false` já que a estrutura do `for` não foi finalizada.
+    
+    ```javascript
+    objeto = it.next()
+    console.log(objeto.value) // 1
+    console.log(objeto.done) // false
+    objeto = it.next()
+    console.log(objeto.value) // 2
+    console.log(objeto.done) // false
+    objeto = it.next()
+    console.log(objeto.value) // undefined
+    console.log(objeto.done) // true (for não executa pois i = 3)
+    ```
+
+    - Esse processo pode ser simplificado da seguinte forma:
+
+    ```javascript
+    let it = minhaFuncaoGeradora()
+    let objeto = null
+
+    while(!(objeto = it.next()).done){
+        console.log(objeto.value)
+    }
+    ```
+
+    **Modificando o método `_init()` com `async/await`**
+
+    ```javascript
+    async _init(){
+        try {
+            const dao = await getNegociacaoDao()
+            const negociacoes = await dao.listaTodos()
+            negociacoes.forEach(negociacao => this._negociacoes.adiciona(negociacao)) 
+        } catch (err) {
+            this._mensagem.texto = err.message //extrai apenas a msg de erro da exceção
+        }
+    }
+    ```
+
+    - É importante lembrar que só se pode utilziar `await` para Promises dentro de funções `async`. Então outros métodos precisam ser alterados para que o funcionamento seja adequado, por exemplo, `adiciona()` e `apaga()` de `NegociacaoController`.
+    - Outras alterações para utilizar `async/await`:
+        - `NegociacaoController/importaNegociacoes()`
+        - `negociacaoService/obtemNegociacoesDoPeriodo()`
+        - `DaoFactory.js`
+
+    **Garantindo compatibilidade com ES2015**
+
+    - Instalação do **preset** do *Babel*: `./client: npm install babel-preset-es2017@6.24.1 --save-dev`
+    - Adicionar o *preset* no `.babelrc`
+    
+    - Quando executado `npm run watch` ou `npm run build` o *preset* realiza a conversão de *async/await* para *promises*
+
+    **Melhorando o tratamento de exceções**
+
+    - As exceções da aplicação são tratadas com `try catch`, então vamos adotar por padrão que *exeções do tipo `ApplicationException`* **são de negócio**. Assim, devem apresentar mensagem diretamente ao usuário. Todos os outros tipos de exceções deverão ser exibidas *via log* para o desenvolvedor e apresentar uma mensagem genérica ao usuário.
+    - Foi alterado o módulo `ApplicationException.js` para lidar com essa definição.
+    - `Object.getPrototypeOf()` retorna o prototype do objeto
+
+    - Alterações:
+        - **Remoção** do `import` *DataInvalidaException* em `NegociacaoController`
+        - **Importação** de *getExceptionMessage* em `NegociacaoController`
+        - **Alteração** de todos os blocos `catch` para uso de `getExceptionMessage`
+        - **Importação** de *ApplicationException* em `NegociacaoService`
+        - **Alteração** de todos os `throw new Error('/*mensagem*/')` -> `throw new ApplicationException(/*mensagem*/)` 
+    
+    - Agora, qualquer exceção lançada por `NegociacaoService` será capturada pelo *bloco catch* em `NegociacaoController`
+
+    **Debounce Pattern**
+
+    - Criação do módulo `client/app-src/util/Debounce.js`
+    - O módulo foi importado em `app.js` e evento do botão *importa negociações* passa a realizar a chamada da função `debounce` passando o método `importaNegociacoes()`.
+    - Definimos um `timer` para *debounce* que receberá um ID a cada temporizador 
+
+
 - [ ] *Cap 19*: Padrão de Projeto Decorator, Fetch API, Metaprogramação com `reflect-metadata`
 - [ ] *Cap 20*: Webpack, Boas práticas em desenvolvimento e produção, Deploy no GithubPages
 

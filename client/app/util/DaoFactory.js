@@ -1,31 +1,36 @@
 System.register(["./ConnectionFatory.js", "../domain/negociacao/NegociacaoDao.js"], function (_export, _context) {
-        "use strict";
+    "use strict";
 
-        var ConnectionFactory, NegociacaoDao;
-        function getNegociacaoDao() {
-                return ConnectionFactory.getConnection().then(conn => new NegociacaoDao(conn));
-        }
+    var ConnectionFactory, NegociacaoDao;
+    async function getNegociacaoDao() {
+        let conn = await ConnectionFactory.getConnection();
+        return new NegociacaoDao(conn);
 
-        // class DaoFactory{
+        // return ConnectionFactory
+        //         .getConnection()
+        //         .then(conn => new NegociacaoDao(conn))
+    }
 
-        //     static getNegociacaoDao(){
-        //         return ConnectionFactory
-        //             .getConnection()
-        //             .then(conn => new NegociacaoDao(conn))
-        //     }
-        // }
+    // class DaoFactory{
 
-        //alteramos a declaração de classe e método pois tinhamos apenas um método preso a classe.
+    //     static getNegociacaoDao(){
+    //         return ConnectionFactory
+    //             .getConnection()
+    //             .then(conn => new NegociacaoDao(conn))
+    //     }
+    // }
 
-        _export("getNegociacaoDao", getNegociacaoDao);
+    //alteramos a declaração de classe e método pois tinhamos apenas um método preso a classe.
 
-        return {
-                setters: [function (_ConnectionFatoryJs) {
-                        ConnectionFactory = _ConnectionFatoryJs.ConnectionFactory;
-                }, function (_domainNegociacaoNegociacaoDaoJs) {
-                        NegociacaoDao = _domainNegociacaoNegociacaoDaoJs.NegociacaoDao;
-                }],
-                execute: function () {}
-        };
+    _export("getNegociacaoDao", getNegociacaoDao);
+
+    return {
+        setters: [function (_ConnectionFatoryJs) {
+            ConnectionFactory = _ConnectionFatoryJs.ConnectionFactory;
+        }, function (_domainNegociacaoNegociacaoDaoJs) {
+            NegociacaoDao = _domainNegociacaoNegociacaoDaoJs.NegociacaoDao;
+        }],
+        execute: function () {}
+    };
 });
 //# sourceMappingURL=DaoFactory.js.map
