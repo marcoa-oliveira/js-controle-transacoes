@@ -1,14 +1,22 @@
 import { Negociacoes, NegociacaoService, Negociacao} from '../domain/index.js'
 import { NegociacoesView, MensagemView, Mensagem, DateConverter } from '../ui/index.js'
-import { getNegociacaoDao, Bind, getExceptionMessage } from '../util/index.js'
+import { getNegociacaoDao, Bind, getExceptionMessage, debounce, controller, bindEvent } from '../util/index.js'
 
+@controller('#data','#quantidade','#valor') //usando o decorator de classe
 export class NegociacaoController{
 
-    constructor(){
-        const $ = document.querySelector.bind(document)
-        this._inputData = $('#data')
-        this._inputQuantidade = $('#quantidade')
-        this._inputValor = $('#valor')
+    constructor(_inputData, _inputQuantidade, _inputValor){ //constructor alterado para receber parâmetros
+                
+        // this._inputData = inputData
+        // this._inputQuantidade = inputQuantidade
+        // this._inputValor = inputValor --------------- podemos trocar por Object.assign
+
+        Object.assign(this, {_inputData, _inputQuantidade, _inputValor})
+        
+        //const $ = document.querySelector.bind(document)
+        // this._inputData = $('#data')
+        // this._inputQuantidade = $('#quantidade')
+        // this._inputValor = $('#valor')
 
         this._negociacoes = new Bind(
             new Negociacoes(),
@@ -27,6 +35,8 @@ export class NegociacaoController{
         this._init()
     }
 
+    @bindEvent('submit','.form') //associa o evento submit do elemento com seletor .form
+    @debounce()
     async adiciona(event){
 
         try {
@@ -76,6 +86,7 @@ export class NegociacaoController{
         )
     }
 
+    @bindEvent('click','#botao-apaga') //associa o evento click do elemento com seletor #botao-apaga
     async apaga(){
         
         try{
@@ -97,6 +108,8 @@ export class NegociacaoController{
         //     .catch(err => this._mensagem.texto = err)
     }
 
+    @bindEvent('click','#botao-importa') //associa o evento click do elemento com seletor #botao-importa
+    @debounce() //importando o decorator
     async importaNegociacoes(){
         try {
             const negociacoes = await this._service.obtemNegociacoesDoPeriodo()

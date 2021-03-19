@@ -838,8 +838,246 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
     - O módulo foi importado em `app.js` e evento do botão *importa negociações* passa a realizar a chamada da função `debounce` passando o método `importaNegociacoes()`.
     - Definimos um `timer` para *debounce* que receberá um ID a cada temporizador 
 
+- [x] *Cap 19*: Padrão de Projeto Decorator, Fetch API, Metaprogramação com `reflect-metadata`
 
-- [ ] *Cap 19*: Padrão de Projeto Decorator, Fetch API, Metaprogramação com `reflect-metadata`
+    **Padrão Decorator**
+    
+    - É um padrão de projeto que permite **adicionar um comportamento** a um objeto já existente **em tempo de execução** de forma *dinâmica*.
+    
+    ```javascript
+    //app-src/controllers/NegociacaoController
+    //...código omitido
+
+    @debounce()
+    async importaNegociacoes(){
+        //...código omitido
+    }
+    //...código omitido
+    ```
+
+    - Dentro das implicações deste projeto, a aplicação do *Decorator*, da maneira apresentada acima, pode ainda não estar disponível com padrão oficial ECMAScript, mas podemos fazer uso da mesma através da instalação de scripts do *Babel*
+    > Em 2018 (ano de publicação do livro base deste projeto, o uso de Decorator aguardava aprovação no TC39)
+
+    - Para ter suporte a *Decorators* com o Babel:
+
+    `./client: npm install babel-plugin-transform-decorators-legacy@1.3.4 --save-dev`
+
+    - Em seguida, precisamos **adicionar** o plugin em `./client/.babelrc`
+    - **Remover** o `import` de *Debounce* em `app.js`
+    - **Criar** o arquivo `./client/jsconfig.json` e abilitar o uso de decorators (*assim evita que o visual studio code exiba uma mensagem de erro ao encontrar uma declaração de decorator*)
+
+    > Aparentemente essa instrução não desativou a msg de erro. A solução foi permitir o uso de decorators em: `preferences -> settings`, pesquisando por Decorators e habilitando *experimentalDecorators*
+
+    - **Excluir o arquivo** `./util/Debounce.js` e seu `export`em `./util/index.js`
+    - **Criação** de um novo arquivo chamado *Debounce* em `./util/decorators/Debounce.js`
+
+    ```javascript
+    //`./util/decorators/Debounce.js`
+    export function debounce(milissegundos = 500){ //recebe uma qtd de tempo, a ser considerado, em milissegundos como param. 
+        return function (target, key, descriptor){
+            return descriptor
+        }
+    }
+    ```
+
+    - Se `debounce` não receber esse parâmetro de tempo, adotará um *default* de meio segundo, que é suportado pelo ES2015.
+    - **Toda decorator** deve retornar outra função que recebe três parâmetros:
+        - **Target**: O alvo do decorator
+        - **Key**: Nome da propriedade na qual o decorator foi utilizado
+        - **Descriptor**: Um objeto especial que dá acesso à implementação original do método ou função através de `descriptor.value`.
+    - A função **sempre** deve devolver o `descriptor` modificado ou não
+    - É necessário guardar uma referência para o método original dentro da função `const metodoOriginal = descriptor.value`, para aplicar o debounce, pois ao modificar este valor precisamos de uma referência para que o método original seja chamado
+    - Com o debounce já implementado, vamos adicionar novamente em `./util/index.js`
+
+    - Se tentarmos reutilizar o decorator `debounce` em outro método, como por exemplo `adiciona()`, o `event.preventDefault()` deixará de funcionar, pois o intervalo de tempo entre a chamada do debounce e a execução do submit são diferentes e o submit acaba passando.
+    - Resolvemos isso:
+    ```javascript
+        export function debounce(milissegundos = 500) {
+            return function(target, key, descriptor) {
+                const metodoOriginal = descriptor.value;
+                let timer = 0;
+                descriptor.value = function(...args) {
+                    // MUDANÇA!
+                    if(event) event.preventDefault(); //caotura o evento
+                    clearInterval(timer);
+                    timer = setTimeout(() => metodoOriginal.apply(this, args), milissegundos);
+                }
+                return descriptor
+            }
+        }
+    ```
+
+    **DOM INJECTOR**
+
+    - Na classe `NegociacaoController` buscamos as tags `input` do form através de `querySelectors` que recebem o seletor CSS dos elementos
+
+    ```javascript
+        //...código omitido
+        constructor(){
+            const $ = document.querySelector.bind(document)
+            this._inputData = $('#data')
+            this._inputQuantidade = $('#quantidade')
+            this._inputValor = $('#valor')
+            //...código omitido
+        }
+    ``` 
+
+    - A ideia agora é a implementação de um **Decorator de Classe** que permita injetar as dependências de elementos da DOM na instância da classe. Algo como:
+
+    ```javascript
+        @controller('#data','#quantidade','#valor')
+        export class NegociacaoController{
+            constructor(inputData,inputQuantidade,inputValor){
+                this._inputData = inputData
+                this._inputQuantidade = inputQuantidade
+                this._inputValor = inputValor
+                //...código omitido
+            }
+        }
+    ```
+
+    - No exemplo acima, o decorator `@controller` recebe os seletores CSS dos elementos que desejamos passar para o novo `constructor` da classe na mesma ordem.
+    - Foi criado o *decorator* `./util/decorators/Controller.js`
+    - Assim como um *decorator* de método, este também retorna uma função, mas desta vez dará **acesso ao construtor da classe decorada**.
+    - Concluído o *decorator* de `controller`, podemos exportar no *barrel* de utils e importar em `NegociacaoController`
+    - O constructor da classe foi **alterado** para receber parâmetros e limpamos o código interno utilizando `Object.assign`
+    
+    **Requisições AJAX com API FETCH**
+
+    - Simplifica drasticamente o código para a realização de requisições assíncronas (*ou Requisições Ajax*).
+    > 2018) API Fetch é um recurso experimental 
+
+    - O método `get()` da classe `./util/HttpService.js` foi reescrito para utilizar API FETCH
+    - **Acessamos a API através da função global** `fetch(url)` que recebe a URL da requisição
+    -  A promise retornada pela função **não retorna uma resposta parseada**, mas sim um objeto que encapsula a resposta e podemos lidar com isso através de `.text()` ou `.json()`
+    - É preciso lidar com eventuais erros durante a operação. Isso pode ser **resolvido por quem chama** `get()`
+
+    ```javascript
+    //exemplo
+
+    let service = new HttpService()
+    service
+        .get('http://endereco-da-api')
+        .then(dados => console.log(dados))
+        .catch(err => console.log(err)) //só será chamada se a Promise for rejeitada
+    ```
+
+    - Para que uma *promise* seja rejeitada, precisamos saber se a *requisição* foi **realizada com sucesso ou não** com base em `res.ok`
+    - **Declaração** do método `_handleErrors(res)` em `HttpService`
+    - `_handleErrors()` verifica se tudo funcionou bem com `res.ok`, retornando `this._handleErrors` que será acessível ao próximo `.then`
+
+    **Configurando uma requisição com API FETCH**
+
+    - Por **padrão**, as requisições são feitas com o **método GET**, mas podemos realizar requisições POST após configurar a requisição.
+    - O servidor deste projeto está preparado para receber requisições POST que enviam JSON para `/negociacoes`
+    - `app.js` terá as seguintes alterações:
+        - `import` de Negociacao
+        - Declaração de uma instância de `Headers` para a configuração do cabeçalho
+        - Através do método `.set` do objeto, idicamos seu `Content-Type`
+        - A variável `body` recebe os dados que desejamos enviar para a API convertidos em JSON
+        - A variável `config` recebe as configurações de acesso à API
+        - Com tudo definido, é realizado o `fetch` no endereço da api
+    
+    > Havia um problema na execução do envio de requisições via POST para o server da aplicação devido alterações no código do mesmo. O código de `./server/app/api/index.js` apresentava um problema na `api.cadastraNegociacao` (linha 51). A solução encontrada foi a substituição do arquivo pelo presente no repositório oficial do projeto (branch 19).
+
+    **Validação com parâmetro DEFAULT**
+
+    - Sabendo que os parâmetros no `constructor()` de `./domain/negociacao/Negociacao.js` são obrigatórios, é necessário uma forma de validar se foram realmente passados.
+    - **Criação** do módulo `./util/Obrigatorio.js` que exportará a função `obrigatorio(parametro)`.
+    - **Export** de `Obrigatorio.js` ao *barrel* de `util`
+    - **Import** de `Obrigatorio.js` em `Negociacao.js`
+    - **Alteração do constructor** para utilizar `obrigatorio()`
+
+    ```javascript
+        constructor(
+            _data = obrigatorio('data'), 
+            _quantidade = obrigatorio('quantidade'), 
+            _valor = obrigatorio('valor')){
+                
+            Object.assign(this, {_quantidade, _valor})
+            this._data = new Date(_data.getTime())
+            Object.freeze(this)
+        }
+    ```
+
+    - Desta forma, qualquer tentativa de utilizar o construtor sem informar todos os parâmetros gerará uma mensagem de erro.
+
+    **REFLECT-METADATA**
+
+    > 2018) Em ECMAScript não há uma maneira especificada para a inclusão de metadados na definição de classes
+
+    - A proposta de uso de **METADATA** tem como objetivo:
+        - **Isolar** a lógica de **associação entre eventos da DOM e métodos do Controller**
+        - Uma **solução** seria a criação do *decorator* `@bindEvent(event,selector,prevent)`, mas *decorators* são métodos que **são aplicados antes da classe ser instânciada**, então o problema seria: "como associar 'método - evento' sem uma instância?"
+    
+    > Existe uma API de reflexão no ECMAScript 2015 acessível através do objeto global `Reflect`, mas neste projeto será utilizado `reflect-metadata`
+
+    - Instalação do projeto: `./client: npm install reflect-metadata@0.1.10 --save`
+    - O módulo precisa ser importado em `index.html`
+    - **Criação** do *decorator* `./util/decorators/BindEvent.js`
+    - A função `Reflect.metadata()` recebe quatro parâmetros:
+        - Nome do metadado, no caso do *decorator* `BindEvent.js`, utilizamos `'bindEvent'`
+        - O segundo é um objeto (**o objeto**) contendo as propriedades: `event`, `selector`, `prevent` e `propertyKey`
+        - O `prototype` da instância em que os metadados serão adicionados
+        - O nome da propriedade que receberá o metadado. Como `@bindEvent` será usado apenas em métodos, `propertyKey` foi usado.
+    - `BindEvent.js` **adicionado** ao *barrel* de util.
+    - Para **extrair** metadados precisamos com o *decorator* de classe:
+        - *Acessar a instância criada* e percorrer suas propriedades (`Object.getOwnPropertyNames()`)
+        - *Verificar em cada propriedade* se o metadado **bindEvent** está presente (`Reflect.hasMetadata()`)
+        - Em `./util/decorator/Controller.js` agora temos:
+
+        ```javascript
+        const constructorNovo = function(){
+            //usamos function() para definir (e não => pois precisamos que o this do constructor seja dinâmico)
+            //constructorNovo deverá chamar constructorOriginal passando os parâmetros necessários
+            
+            const instance = new constructorOriginal(...elements)
+            //Object varre cada propriedade da da classe
+            Object
+                .getOwnPropertyNames(constructorOriginal.prototype)
+                .forEach(property => {
+                    if(Reflect.hasMetadata('bindEvent', instance, property)){
+                        //precisa fazer a associação do evento
+                    }
+                })
+        }
+        ```
+
+        - Foi criada uma função auxiliar `associaEvento()` que recebe a instância da classe e o metadado
+
+        ```javascript
+        
+        function associaEvento(instance, metadado){
+            document
+                .querySelector(metadado.selector)
+                .addEventListener(metadado.event, event => {
+                    if(metadado.prevent) event.preventDefault()
+                    instance[metadado.propertyKey](event)
+                })
+        }
+
+        ```
+
+        - Utilizando `Reflect.getMetadata()` a informação será extraída, passando como parâmetro *identificador do metadado* (`instance`), *instância da classe* e *nome da propriedade que possui o metadado* (`Reflect.getMetadata('bindEvent', instance, property)`)
+
+        ```javascript
+            const constructorNovo = function(){
+            
+                const instance = new constructorOriginal(...elements)
+                Object
+                    .getOwnPropertyNames(constructorOriginal.prototype)
+                    .forEach(property => {
+                        if(Reflect.hasMetadata('bindEvent', instance, property)){
+                            //precisa fazer a associação do evento
+                            associaEvento(instance, Reflect.getMetadata('bindEvent', instance, property))
+
+                        }
+                    })
+            }
+        ```
+
+        - Após isso, já podem ser removidas as associações e alias em `./app-src/app.js`
+
 - [ ] *Cap 20*: Webpack, Boas práticas em desenvolvimento e produção, Deploy no GithubPages
 
 ## Observações

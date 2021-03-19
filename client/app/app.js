@@ -1,26 +1,48 @@
-System.register(['./controllers/NegociacaoController.js', './util/Debounce.js'], function (_export, _context) {
+System.register(['./controllers/NegociacaoController.js', './domain/index.js'], function (_export, _context) {
     "use strict";
 
-    var NegociacaoController, debounce;
+    var NegociacaoController, Negociacao;
     return {
         setters: [function (_controllersNegociacaoControllerJs) {
             NegociacaoController = _controllersNegociacaoControllerJs.NegociacaoController;
-        }, function (_utilDebounceJs) {
-            debounce = _utilDebounceJs.debounce;
+        }, function (_domainIndexJs) {
+            Negociacao = _domainIndexJs.Negociacao;
         }],
         execute: function () {
+            //import { debounce } from './util/Debounce.js' removido para o uso de decorators
 
             const controller = new NegociacaoController(); //alterado de let para const pois o valor da variável não será alterado
-            const $ = document.querySelector.bind(document);
+            // const $ = document.querySelector.bind(document)
 
-            $('.form').addEventListener('submit', controller.adiciona.bind(controller));
+            // $('.form')
+            //     .addEventListener('submit', controller.adiciona.bind(controller))
 
-            $('#botao-apaga').addEventListener('click', controller.apaga.bind(controller));
+            // $('#botao-apaga')
+            //     .addEventListener('click', controller.apaga.bind(controller))
 
-            $('#botao-importa').addEventListener('click', debounce(() => {
-                console.log('Executou a operação de debounce');
-                controller.importaNegociacoes();
-            }, 1000));
+            // $('#botao-importa')
+            //     .addEventListener('click', controller.importaNegociacoes.bind(controller))
+            //     // .addEventListener('click', debounce(() => {
+            //     //     console.log('Executou a operação de debounce')
+            //     //     controller.importaNegociacoes()
+            //     // }, 1000)) retornou para a forma anterior. usaremos decorator agora
+
+            //Os Alias $ e associações de eventos foram removidos para o uso de REFLECT-METADATA no cap.19
+
+
+            const negociacao = new Negociacao(new Date(), 15, 200);
+            const headers = new Headers();
+            headers.set('Content-Type', 'application/json');
+            const body = JSON.stringify(negociacao);
+            const method = 'post';
+
+            const config = {
+                method,
+                headers,
+                body
+            };
+
+            fetch('/negociacoes', config).then(() => console.log('Dado enviado com sucesso')).catch(err => console.log(err.message));
         }
     };
 });
