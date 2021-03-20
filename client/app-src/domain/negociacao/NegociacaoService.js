@@ -10,7 +10,7 @@ export class NegociacaoService {
 
     obtemNegociacaoDaSemana(){ //alterado pois a responsabilidade de lidar com XMLHttp foi passada para HttpService
         return this._http
-            .get('negociacoes/semana')
+            .get('/negociacoes/semana') //http://localhost:3000/ alterado devido alterações no cap.20
             .then(dados => 
                 dados.map(objeto => new Negociacao(new Date(objeto.data), objeto.quantidade, objeto.valor))
             ,
@@ -23,7 +23,7 @@ export class NegociacaoService {
 
     obtemNegociacoesDaSemanaAnterior(){
         return this._http
-            .get('negociacoes/anterior')
+            .get('/negociacoes/anterior')
             .then(dados =>
                 dados.map(objeto => new Negociacao(new Date(objeto.data), objeto.quantidade, objeto.valor))
             ,
@@ -35,7 +35,7 @@ export class NegociacaoService {
 
     obtemNegociacoesDaSemanaRetrasada(){
         return this._http
-            .get('negociacoes/retrasada')
+            .get('/negociacoes/retrasada')
             .then(dados =>
                 dados.map(objeto => new Negociacao(new Date(objeto.data), objeto.quantidade, objeto.valor))
             ,

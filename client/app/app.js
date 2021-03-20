@@ -1,49 +1,37 @@
-System.register(['./controllers/NegociacaoController.js', './domain/index.js'], function (_export, _context) {
-    "use strict";
+import { NegociacaoController } from './controllers/NegociacaoController.js';
+import { Negociacao } from './domain/index.js';
+//import { debounce } from './util/Debounce.js' removido para o uso de decorators
 
-    var NegociacaoController, Negociacao;
-    return {
-        setters: [function (_controllersNegociacaoControllerJs) {
-            NegociacaoController = _controllersNegociacaoControllerJs.NegociacaoController;
-        }, function (_domainIndexJs) {
-            Negociacao = _domainIndexJs.Negociacao;
-        }],
-        execute: function () {
-            //import { debounce } from './util/Debounce.js' removido para o uso de decorators
+const controller = new NegociacaoController(); //alterado de let para const pois o valor da variável não será alterado
+// const $ = document.querySelector.bind(document)
 
-            const controller = new NegociacaoController(); //alterado de let para const pois o valor da variável não será alterado
-            // const $ = document.querySelector.bind(document)
+// $('.form')
+//     .addEventListener('submit', controller.adiciona.bind(controller))
 
-            // $('.form')
-            //     .addEventListener('submit', controller.adiciona.bind(controller))
+// $('#botao-apaga')
+//     .addEventListener('click', controller.apaga.bind(controller))
 
-            // $('#botao-apaga')
-            //     .addEventListener('click', controller.apaga.bind(controller))
+// $('#botao-importa')
+//     .addEventListener('click', controller.importaNegociacoes.bind(controller))
+//     // .addEventListener('click', debounce(() => {
+//     //     console.log('Executou a operação de debounce')
+//     //     controller.importaNegociacoes()
+//     // }, 1000)) retornou para a forma anterior. usaremos decorator agora
 
-            // $('#botao-importa')
-            //     .addEventListener('click', controller.importaNegociacoes.bind(controller))
-            //     // .addEventListener('click', debounce(() => {
-            //     //     console.log('Executou a operação de debounce')
-            //     //     controller.importaNegociacoes()
-            //     // }, 1000)) retornou para a forma anterior. usaremos decorator agora
-
-            //Os Alias $ e associações de eventos foram removidos para o uso de REFLECT-METADATA no cap.19
+//Os Alias $ e associações de eventos foram removidos para o uso de REFLECT-METADATA no cap.19
 
 
-            const negociacao = new Negociacao(new Date(), 15, 200);
-            const headers = new Headers();
-            headers.set('Content-Type', 'application/json');
-            const body = JSON.stringify(negociacao);
-            const method = 'post';
+const negociacao = new Negociacao(new Date(), 15, 200);
+const headers = new Headers();
+headers.set('Content-Type', 'application/json');
+const body = JSON.stringify(negociacao);
+const method = 'post';
 
-            const config = {
-                method,
-                headers,
-                body
-            };
+const config = {
+    method,
+    headers,
+    body
+};
 
-            fetch('/negociacoes', config).then(() => console.log('Dado enviado com sucesso')).catch(err => console.log(err.message));
-        }
-    };
-});
+fetch('http://localhost:3000/negociacoes', config).then(() => console.log('Dado enviado com sucesso')).catch(err => console.log(err.message));
 //# sourceMappingURL=app.js.map

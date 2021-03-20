@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Negociações</title>
-    <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/bootstrap-theme.css">
-    
+    <!-- <link rel="stylesheet" href="dist/styles.css">     -->
 </head>
 <body class="container">
     
@@ -47,13 +45,16 @@
     <!-- esqueleto da tabela movido para NegociacoesView.js -->
     <div id="negociacoes"></div>
     
-    <script src="node_modules/reflect-metadata/Reflect.js"></script>
+    <!-- <script src="node_modules/reflect-metadata/Reflect.js"></script>
+    <script src="dist/vendor.bundle.js"></script>
+    <script src="dist/bundle.js"></script> -->
+
     <!-- Removemos todas a importações e passamos a responsabilidade para o System.js 16/03/21 -->
-    <script src="node_modules/systemjs/dist/system.js"></script>
+    <!-- <script src="node_modules/systemjs/dist/system.js"></script> removido para o uso do webpack no Cap.20
     <script>
         System
             .import ('app/app.js')
             .catch(err => console.error(err))
-    </script>
+    </script> -->
 </body>
 </html>

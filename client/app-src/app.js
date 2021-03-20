@@ -1,3 +1,11 @@
+import 'bootstrap/dist/css/bootstrap.css'
+import 'bootstrap/dist/css/bootstrap-theme.css'
+
+// import 'jquery/dist/jquery.js' removido após o uso de webpack.ProvidePlugin
+
+import 'bootstrap/js/modal.js'
+import '../css/meucss.css'
+
 import { NegociacaoController } from './controllers/NegociacaoController.js'
 import { Negociacao } from './domain/index.js' 
 //import { debounce } from './util/Debounce.js' removido para o uso de decorators

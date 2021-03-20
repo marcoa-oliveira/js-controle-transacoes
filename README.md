@@ -1078,7 +1078,258 @@ Atividade de estudo com o livro *Cangaceiro JavaScript: Uma aventura no sertão 
 
         - Após isso, já podem ser removidas as associações e alias em `./app-src/app.js`
 
-- [ ] *Cap 20*: Webpack, Boas práticas em desenvolvimento e produção, Deploy no GithubPages
+- [x] *Cap 20*: Webpack, Boas práticas em desenvolvimento e produção, Deploy no GithubPages
+
+    - Questões a serem observadas antes da finalização projeto:
+        - Otimização da quantidade de requisições ao servidor
+        - NPM para baixar e gerenciar dependências do front-end
+        - Minificação de scripts para o ambiente de produção
+        - Como obter resultados, semelhantes ao alcançado no servidor disponibilizado, em ferramentas de mercado
+    
+    **Webpack**
+
+    - Webpack é um *module bundler* (agrupador de módulos), permite tratar diversos recursos da aplicação como um módulo, inclusive CSS.
+    - Tudo é organizado no processo de **_build_** e no final gera um arquivo `bundle.js` contendo todos os módulos necessários para a aplicação. Sendo assim, **dispensa o uso de um *loader* como o *System.js* utilizado no projeto**.
+    - **Alteração** de `index.html` para remover as configurações de `system.js` e importar `bundle.js`
+    - **Apagar** a pasta `.client/app` (onde estão os arquivos transpilados pelo babel)
+    - **Remoção** de `babel-cli` (*npm uninstall babel-cli --save-dev*) e `Systemjs` (*npm uninstall systemjs --save*)
+    - Mesmo não utilizando mais `babel-cli` ainda é necessário ter o *Babel* no projeto para utilizar Webpack
+    - **Instalação** do *Babel Core* `npm install babel-core@6.25.0 webpack@3.1.0 --save-dev`
+
+    **webpack.config.js**
+
+    - Arquivo que centraliza as configurações do **webpack**
+    - Precisamos definir neste arquivo:
+        - **Entry**: O primeiro módulo a ser carregado
+        - **Output**: Ponto de saída do *Bundle* criado
+    - **Criação** de `./client/webpack.config.js`
+
+    ```javascript
+    //webpack.config.js
+
+    const path = require('path')
+
+    module.exports = {
+        entry: './app-src/app.js',
+        output: {
+            filename: 'bundle.js',
+            path: path.resolve(__dirname, 'dist')
+        }
+    }
+
+    ```
+
+    - **Adicionar** em `./client/package.json` o *npm script* do binário do Webpack
+    - **Remover** todos os scripts adicionados, mantendo apenas *test*
+    
+    **Babel-loader**
+
+    - A ponte de ligação entre Webpack e Babel-core
+    - **Instalação**: `npm install babel-loader@7.1.0 --save-dev`
+    - **Configurar** o *module* no `webpack.config.js`
+    
+    ```javascript
+    //webpack.config.js
+        module:{
+            rules:[
+                {
+                    test: /\.js$/,
+                    exclude: /node_modules/,
+                    use: {
+                        loader: 'babel-loader'
+                    }
+                }
+            ]
+        }
+    ```
+
+    - `test` indica a condição na qual o loader será utilizado. Neste caso, todos os arquivos com extensão *.js* serão considerados
+    - `exclude` indica que a pasta *node_modules* não será processada
+    - `use` faz a indicação do loader
+
+    - **Remoção** do módulo `babel-plugin-transform`, pois já não é mais necessário devido compatibilidade do webpack com módulos ES2015
+    `./client: npm uninstall babel-plugin-transform-es2015-modules-systemjs --save-dev`
+    - **Alteração** `.babelrc` removendo todos os plugins exceto *transform-decorators-legacy*
+
+    - Neste ponto, ao realizar o **build** `./client: npm run build-dev`, é gerada a pasta *dist* contendo **bundle.js**. Agora, mesmo sem subir o servidor da aplicação, a aplicação estará funcionando. **BUILD DE DESENVOLVIMENTO**
+
+    **Build de Produção**
+
+    - **Criação** do *npm script* `build-prod` em `package.json`:  `"build-prod": "webpack -p --config webpack.config.js"`
+    - O parâmetro `-p` indica ao webpack que queremos uma versão minificada de *bundle.js* para produção
+    - Neste ponto, ao realizar o **build** `./client: npm run build-prod`, será gerada a versão para produção, mas teremos uma mensagem de erro.
+
+    > ERROR in bundle.js from UglifyJs. Unexpected token: name (Negociacao)
+
+    - Este erro acontece pela questão dos **módulos não serem compatíveis com ES2015**.
+    - Então, não faremos mais uso do parâmetro `-p` e sim do plugin `babili-webpack-plugin`
+    - **Instalação** do plugin `./client: npm install babili-webpack-plugin@0.1.1 --save-dev`
+    - **Configurar** o plugin em `webpack.config.js` verificando se `process.env.NODE_ENV` está em `production`
+    - **Configurar** `package.json` para atribuir `NODE_ENV = production` em toda chamada de `run build-prod`
+        - Essa solução só funciona em ambientes *MAC e LINUX*, neste caso temos que utilizar uma solução *multiplataforma*
+        - **Instalar** o módulo `cross-env`: `npm install --save-dev cross-env@5.0.1`
+        - **Alterar** `package.json` para fazer uso do *cross-env*
+        `"build-prod": "cross-env NODE_ENV=production webpack --config webpack.config.js"`
+    - Neste ponto, `npm run build-prod` gerará o bundle.js minificado
+
+    **Webpack Dev Server**
+
+    - O problema aqui é que **a cada alteração no projeto**, um `npm run build-dev` precisa ser realizado para que a alteração seja passada para o ambiente de desenvolvimento.
+    - **Instalar** o módulo `webpack-dev-server`, um servidor para o ambiente de desenvolvimento integrado ao Webpack. Dispara um build no projeto toda vez que um arquivo for alterado.
+    - **Alterar** `./server/config/express.js` para desabilitar a disponibilização do projeto ao navegador
+    - **Alterar** `./negociacao/NegociacaoService.js` e adicionar `http://localhost:3000` ao endereço de acesso da API
+    - **Instalar** `./client: npm install webpack-dev-server@2.5.1 --save-dev`
+    - **Incluir** o script `"start": "webpack-dev-server"` em `package.json`
+    > Esqueci de realizar esta etapa e o terminal exibia um erro: *npm missing script start*
+    - **Excluir** a pasta `dist`, que só deve existir quando executado `npm run build-dev` ou `build-prod`
+    - Durante o uso do *webpack dev server* o `build` é realizando na memória do servidor
+    - O novo *localhost* disponibilizado é o `localhost:8080`
+    - Ao carregarmos a página (`./client: npm start`), o console do navegador exibe um aviso de erro por não ter encontrado `bundle.js`. Isso ocorre pois apontamos para o local antigo dele (que por sinal não existe mais)
+    - **Alterar** `webpack.config.js`:
+    
+    ```javascript
+    //webpack.config.js
+    //...código omitido
+    output: {
+        filename: 'bundle.js',
+        path: path.resolve(__dirname, 'dist'),
+        publicPath: "dist" // adicionamos esta nova chave para o caminho público acessivel
+    }
+    //...
+    ```
+
+    > Não está carregando os dados do servidor!
+
+    **CSS como módulos**
+
+    - **Apagar** pasta `./client/css`
+    - **Instalar** o bootstrap via npm: `npm install bootstrap@3.3.7 --save-dev`
+    - **Remover** importações de CSS de `index.html`
+    - **Importar** o bootstrap em `app.js`
+    - Ainda precisamos de um *loader* para auxiliar o webpack a lidar com CSS como se fosse módulo
+        - *css-loader*: transforma arquivos css importados em JSON
+        - *style-loader*: utiliza a informação JSON para adicionar os estilos "inline" diretamente no HTML através da tag style
+     - **Instalar**:
+        - `npm install css-loader@0.28.4 style-loader@0.18.2 --save-dev`
+    - **Configurar** o uso dos loaders em `webpack.config.json`
+
+    ```javascript
+        module:{
+            rules:[
+                {
+                    test: /\.js$/,
+                    exclude: /node_modules/,
+                    use: {
+                        loader: 'babel-loader'
+                    }
+                },
+                {
+                    test: /\.css$/,
+                    loader: 'style-loader!css-loader' //nova regra!
+                }
+            ]
+        }
+    ```
+
+    - Neste momento, se subirmos a aplicação novamente, receberemos várias mensagens de erro devido dependências do bootstrap que o webpack não sabe como resolver durante o build.
+    - Para isso, utilizaremos neste projeto o `url-loader` e `file-loader`
+        - `npm install url-loader@0.5.9 file-loader@0.11.2 --save-dev`
+    - **Adicionar** novas regras para o uso do *url-loader* e *file-loader*
+    - **Criar** um arquivo CSS em `client/css/meucss.css`
+    - **Importar** em `app.js`
+
+    **FOUC - Flash of Unstyled Content**
+
+    - Ao carregar a aplicação, durante uma fração de tempo *a página surge sem a implementação do CSS*. Isso ocorre pois os estilos importados são aplicados programaticamente pelo *bundle* 
+    - Vamos **retornar** com a importação via *tag link* em `index.html`
+    - **Instalar** o plugin `extract-text-webpack-plugin`
+        `npm install extract-text-webpack-plugin@3.0.0 --save-dev`
+    - **Importar** em `webpack.config.js` e guardar sua instância dentro da lista de plugins e **Alterar** as regras de CSS.
+
+    **Minificação de CSS**
+    
+    - `dist/styles.css` é carregado, mas não está otimizado. Podemos solucionar esse problema da seguinte maneira:
+        - **Instalar**: `npm install optimize-css-assets-webpack-plugin@2.0.0 --save-dev` e `npm install cssnano@3.10.0 --save-dev`
+    
+    **Importando Scripts**
+    Ao realizarmos o *import* de `bootstrap/js/modal.js` em `app.js` não temos nenhuma notificação de erro no terminal, mas no console do navegador temos uma notificação de que este modal *depende* de **JQuery**
+    - **Instalar** `npm install jquery@3.2.1 --save`
+    - **Importar** em `app.js`
+    - Mesmo fazendo essas alterações, continuamos com o mesmo problema, pois estamos lidando com uma **dependência global**
+    - Para tornar o *JQuery* **globalmente disponível**, vamos utilizar `webpack.ProvidePlugin`. Ele carrega os módulos automaticamente ao invés de importá-los em qualquer lugar.
+    - **Importar** `webpack` em `webpack.config.js`
+
+    **SCOPE HOISTING**
+
+    - Cada módulo do *bundle* é envolvido por um **wrapper**, que é uma função.
+    - A existência de *wrappers* torna a execução no navegador **mais lenta**
+    - **Scope Hoisting**: concatenar o escopo de todos os módulos em um único wrapper permitindo agilizar a execução no navegador
+    - Este recurso será ativado apenas em produção
+    - **Ativar** *Scope Hoisting* em `webpack.config.js` 
+    
+    > `ModuleConcatenationPlugin()` está setado como *depreciado*!
+
+    **Separação de bibliotecas**
+
+    - *Bundle.js* possui todo o código da aplicação, incluindo das bibliotecas que foram utilizadas no projeto. Porém, a cada alteração no projeto, um novo bundle é gerado e necessita ser novamente "cacheado".
+    - Precisamos separar o código da aplicação das bibliotecas para otimizar esse processo
+    - **Utilizar** `CommonsChunkPlugin` em `webpack.config.js`
+
+    ```javascript
+    
+    if(process.env.NODE_ENV == 'production'){
+        //...código omitido
+        
+        //utilizando CommonsChunkPlugin
+        plugins.push(
+            new webpack.optimize.CommonsChunkPlugin({
+                name: 'vendor',
+                filename: 'vendor.bundle.js'
+            })
+        )
+        
+        //código omitido
+    }
+    
+    ```
+
+    - `vendor`: a parte da aplicação com essa identificação (todas as bibliotecas indicadas e que fazem parte de node_modules) farão parte de `vendor.bundle.js`
+    - Agora vamos dividir a aplicação em duas partes editando `webpack.config.js`
+
+    ```javascript
+    module.exports = {
+        entry: {
+        app: './app-src/app.js', //aqui a aplicação tem a build dividida com dois pontos de entrada (app e vendor)
+        vendor: ['jquery', 'bootstrap', 'reflect-metadata']
+    },
+    ``` 
+
+    - **Alterar** `index.html` para carrear `vendor.bundle.js`
+
+    > Ao dar o build do projeto após estes passos, o console exibe a seguinte mensagem de erro:
+
+    ```console
+    chunk vendor [entry]
+    bundle.js
+    Conflict: Multiple assets emit to the same filename bundle.js    
+    ```
+    *Pesquisar como resolver*
+
+    **Gerar a página principal automáticamente**
+
+    - **Instalar**: `npm install html-webpack-plugin@2.29.0 --save-dev`
+    - **Renomear**: `index.html` para `main.html`
+    - **Remover**: todas as tags *link* e *script* que importam CSS e Javascript de `main.html`
+    - **Alterar**: `webpack.config.js`, o plugin recebe um objeto como parâmetro com suas configurações dentro:
+        - `hash`: se *true* insere um hash no final da url de arquivos javascript e css importados no html. *Bom para Versionamento e Cache*
+        - `minify`: recebe as configurações para minificar o html
+        - `filename`: nome do arquivo HTML que será gerado
+        - `template`: caminho do arquivo que servirá de template na geração de index.html
+    - **Alterar**: o caminho dos imports dos scripts e estilos para atender o novo local de index.html (`./client/dist/index.html`)
+
+
+    > O projeto avançou apenas até o **Cap.20.15** - alguns problemas no build impossibilitaram o avanço no projeto e, no momento, não sei como resolvê-los ou em que ponto estão concentrados. Em algum momento retorno para o projeto.
+
 
 ## Observações
 
